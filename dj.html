@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DJ Request - DJ Side</title>
+  <title>Live Requests - DJ Side</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -19,6 +19,7 @@
       --green:#3ddc84;
       --red:#ff6b6b;
       --blue:#7cc7ff;
+      --yellow:#ffd166;
       --shadow:0 18px 50px rgba(0,0,0,.35);
       --radius:18px;
     }
@@ -30,11 +31,8 @@
       font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
     body{min-height:100vh}
-    .app{max-width:1300px;margin:0 auto;padding:18px}
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;gap:16px;
-      margin-bottom:18px;flex-wrap:wrap;
-    }
+    .app{max-width:1320px;margin:0 auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
     .brand h1{margin:0;font-size:26px;line-height:1.05}
     .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
     .view-toggle{
@@ -60,11 +58,17 @@
     .panel-header p{margin:4px 0 0;color:var(--muted);font-size:13px}
     .panel-body{padding:18px}
     .grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input{
+    input,select{
       width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);
       border-radius:12px;padding:12px 13px;font-size:15px;outline:none;
     }
+    .checkbox-row{
+      display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3040;background:#0f1219;color:var(--text);
+      border-radius:12px;min-height:48px;
+    }
+    .checkbox-row input{width:auto;margin:0}
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}
     .primary-btn{background:var(--green);color:#08100b}
@@ -77,13 +81,16 @@
       border-radius:14px;margin-bottom:16px;flex-wrap:wrap;
     }
     .event-banner h3{margin:0;font-size:17px}
-    .event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.5}
+    .event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
     .badge{
       display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;
       background:#121826;border:1px solid #263246;color:#d6ecff;font-size:12px;font-weight:700;white-space:nowrap;
     }
     .badge.live{color:#b9ffd5;border-color:#1f6f45;background:#0f1b15}
     .badge.closed{color:#ffcdcd;border-color:#70303a;background:#181014}
+    .badge.tip{color:#ffeab3;border-color:#6e5a18;background:#1c1607}
+    .badge.repeat{color:#ffd6ff;border-color:#6f3577;background:#180d1a}
+    .badge.dup{color:#ffe1c2;border-color:#7d4b21;background:#1b1208}
     .requester-card{
       background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px;
     }
@@ -100,13 +107,9 @@
     .request-title{display:flex;flex-direction:column;gap:4px;min-width:0}
     .request-title strong{font-size:17px;line-height:1.2;word-break:break-word}
     .request-sub{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word}
-    .pill{
-      display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
-      background:#172116;color:#aaf4c8;border:1px solid #2f6140;
-    }
     .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .success,.warning{
-      border-radius:12px;padding:12px 13px;font-size:14px
+      border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5;
     }
     .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
     .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
@@ -132,10 +135,14 @@
     .flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}
     .flyer-preview img{width:220px;height:220px;object-fit:contain}
     .flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .config-box{
-      background:#101723;border:1px solid #283246;border-radius:18px;padding:15px;margin-bottom:16px;
+    .settings-box{
+      background:#101723;border:1px solid #283246;border-radius:18px;padding:15px;margin-top:14px;
     }
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .settings-box h3{margin:0 0 10px}
+    .request-flags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    @media (max-width:1024px){
+      .grid-3{grid-template-columns:1fr}
+    }
     @media (max-width:900px){
       .qr-wrap,.grid-2{grid-template-columns:1fr}
     }
@@ -145,13 +152,13 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <h1>DJ Request</h1>
-      <p>DJ side with event setup, QR/flyer tools, and requests-only queue view.</p>
+      <h1>Live Requests</h1>
+      <p>DJ side with event setup, request limits, cutoff settings, and returning-requester notifications.</p>
     </div>
     <div class="view-toggle">
       <button id="showFullBtn" class="active" type="button">Full DJ View</button>
       <button id="showQueueBtn" type="button">Requests Only</button>
-      <button id="resetDemoBtn" type="button">Reset Demo</button>
+      <button id="loadLiveBtn" type="button">Load Active Event</button>
     </div>
   </div>
 
@@ -161,19 +168,10 @@
         <h2>DJ / Event Side</h2>
         <p>Create the event, generate the QR-style link, and manage the queue.</p>
       </div>
-      <div class="row">
-        <button class="ghost-btn" id="loadLiveBtn" type="button">Load Active Event</button>
-      </div>
     </div>
 
     <div class="panel-body split-stack">
       <div id="djSetupSection">
-        <div class="config-box">
-          <h3 style="margin:0 0 8px;">Firebase config</h3>
-          <div class="helper">Paste the same four values from Firebase into both files. This page will not work live until you do.</div>
-          <div class="helper" style="margin-top:8px;"><span class="mono">apiKey</span>, <span class="mono">authDomain</span>, <span class="mono">projectId</span>, <span class="mono">appId</span></div>
-        </div>
-
         <div class="event-banner" id="activeEventBanner">
           <div>
             <h3>No active event yet</h3>
@@ -209,6 +207,39 @@
           </div>
         </div>
 
+        <div class="settings-box">
+          <h3>Request Settings</h3>
+          <div class="grid-3">
+            <div>
+              <label for="requestLimitMinutes">Limit per person</label>
+              <select id="requestLimitMinutes">
+                <option value="0">No limit</option>
+                <option value="5">1 request every 5 minutes</option>
+                <option value="10">1 request every 10 minutes</option>
+                <option value="15">1 request every 15 minutes</option>
+                <option value="30">1 request every 30 minutes</option>
+                <option value="60">1 request every 1 hour</option>
+              </select>
+            </div>
+            <div>
+              <label for="cutoffMinutes">Request cutoff before show ends</label>
+              <select id="cutoffMinutes">
+                <option value="0">No cutoff</option>
+                <option value="30">30 minutes before end</option>
+                <option value="60">1 hour before end</option>
+              </select>
+            </div>
+            <div>
+              <label>Returning requester alerts</label>
+              <div class="checkbox-row">
+                <input id="flagReturningRequesters" type="checkbox" checked />
+                <span>Notify if requester has requested at past events</span>
+              </div>
+            </div>
+          </div>
+          <div class="helper" style="margin-top:10px;">Any request with a tip amount greater than $0 bypasses both the request limit and the cutoff.</div>
+        </div>
+
         <div class="row" style="margin-top:12px;">
           <button class="primary-btn" id="saveEventBtn" type="button">Save / Update Event</button>
           <button class="ghost-btn" id="setLiveNowBtn" type="button">Make Event Live Now</button>
@@ -232,7 +263,7 @@
             <div class="helper">Clean QR block you can screenshot, print, or open in a separate window.</div>
 
             <div class="flyer-preview" id="flyerPreview">
-              <div class="big" id="flyerTitle">Scan to Request a Song</div>
+              <div class="big" id="flyerTitle">Live Requests</div>
               <img id="flyerQrImage" alt="Flyer QR code" />
               <div class="small" id="flyerMeta">Create an event to generate the flyer-ready QR.</div>
             </div>
@@ -267,7 +298,6 @@
 </div>
 
 <script>
-// PASTE YOUR FIREBASE VALUES HERE IN THIS FILE
 const firebaseConfig = {
   apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
@@ -278,11 +308,11 @@ const firebaseConfig = {
 let db = null;
 let unsubscribeRequests = null;
 let activeEventId = null;
+let currentEventData = null;
 
 const els = {
   showFullBtn: document.getElementById("showFullBtn"),
   showQueueBtn: document.getElementById("showQueueBtn"),
-  resetDemoBtn: document.getElementById("resetDemoBtn"),
   loadLiveBtn: document.getElementById("loadLiveBtn"),
   djSetupSection: document.getElementById("djSetupSection"),
   eventName: document.getElementById("eventName"),
@@ -291,6 +321,9 @@ const els = {
   eventStart: document.getElementById("eventStart"),
   eventEnd: document.getElementById("eventEnd"),
   djName: document.getElementById("djName"),
+  requestLimitMinutes: document.getElementById("requestLimitMinutes"),
+  cutoffMinutes: document.getElementById("cutoffMinutes"),
+  flagReturningRequesters: document.getElementById("flagReturningRequesters"),
   saveEventBtn: document.getElementById("saveEventBtn"),
   setLiveNowBtn: document.getElementById("setLiveNowBtn"),
   activeEventBanner: document.getElementById("activeEventBanner"),
@@ -356,6 +389,9 @@ function eventFromInputs(forceLive=false) {
     startAt,
     endAt,
     active: true,
+    requestLimitMinutes: Number(els.requestLimitMinutes.value || 0),
+    cutoffMinutes: Number(els.cutoffMinutes.value || 0),
+    flagReturningRequesters: !!els.flagReturningRequesters.checked,
     updatedAt: Date.now()
   };
 }
@@ -404,6 +440,7 @@ function hideNotification() {
 
 function renderEvent(eventId, eventData) {
   activeEventId = eventId;
+  currentEventData = eventData;
 
   els.eventName.value = eventData.name || "";
   els.eventVenue.value = eventData.venue || "";
@@ -411,10 +448,18 @@ function renderEvent(eventId, eventData) {
   els.eventDate.value = eventData.date || "";
   els.eventStart.value = eventData.startTime || "";
   els.eventEnd.value = eventData.endTime || "";
+  els.requestLimitMinutes.value = String(eventData.requestLimitMinutes || 0);
+  els.cutoffMinutes.value = String(eventData.cutoffMinutes || 0);
+  els.flagReturningRequesters.checked = eventData.flagReturningRequesters !== false;
 
   const status = eventStatus(eventData);
   const badgeClass = status === "live" ? "badge live" : (status === "ended" ? "badge closed" : "badge");
   const badgeText = status === "live" ? "Live Now" : status === "ended" ? "Ended" : "Upcoming";
+  const settingsText = [
+    eventData.requestLimitMinutes ? `Limit: every ${eventData.requestLimitMinutes} min` : "Limit: none",
+    eventData.cutoffMinutes ? `Cutoff: ${eventData.cutoffMinutes} min before end` : "Cutoff: none",
+    eventData.flagReturningRequesters !== false ? "Returning alerts: on" : "Returning alerts: off"
+  ].join(" · ");
 
   els.activeEventBanner.innerHTML = `
     <div>
@@ -422,7 +467,8 @@ function renderEvent(eventId, eventData) {
       <div class="meta">
         ${escapeHtml(eventData.venue || "No venue")}<br>
         DJ: ${escapeHtml(eventData.djName || "Not set")}<br>
-        ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add date/time"}
+        ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add date/time"}<br>
+        ${escapeHtml(settingsText)}
       </div>
     </div>
     <span class="${badgeClass}">${badgeText}</span>
@@ -436,8 +482,8 @@ function renderEvent(eventId, eventData) {
     els.qrImage.src = qrUrl;
     els.flyerQrImage.src = qrUrl;
     els.qrCaption.textContent = eventData.name || "QR ready";
-    els.flyerTitle.textContent = eventData.name || "Scan to Request a Song";
-    els.flyerMeta.textContent = `${eventData.venue || ""} • ${eventData.startAt ? formatDateTime(new Date(eventData.startAt)) : ""}`;
+    els.flyerTitle.textContent = "Live Requests";
+    els.flyerMeta.textContent = `${eventData.name || ""} • ${eventData.venue || ""}`;
   }
 }
 
@@ -459,8 +505,12 @@ function renderQueue(requests) {
             Requested by ${escapeHtml(req.name)} · ${escapeHtml(req.email)}<br>
             Position ${idx + 1}
           </div>
+          <div class="request-flags">
+            ${req.tip > 0 ? `<span class="badge tip">Tipped $${req.tip}</span>` : ``}
+            ${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}
+            ${req.returningRequester ? `<span class="badge repeat">Past requester (${req.returningRequesterCount || 1})</span>` : ``}
+          </div>
         </div>
-        <span class="pill">Queue</span>
       </div>
 
       ${req.response ? `<div class="requester-card" style="padding:10px 12px; border-radius:12px; background:#101723;"><strong style="font-size:12px; color:#9bc5ff;">DJ Response</strong><div style="margin-top:4px; font-size:14px;">${escapeHtml(req.response)}</div></div>` : ""}
@@ -505,7 +555,7 @@ function initFirebase() {
 async function saveEvent(forceLive=false) {
   const data = eventFromInputs(forceLive);
   if (!data) {
-    showStatus("Please fill in event name, venue, date, start time, and end time.");
+    showStatus("Please fill in event name, venue, date, start time, end time, and settings.");
     return;
   }
   if (!db) return;
@@ -571,12 +621,20 @@ function listenRequests() {
         return (a.createdAt ?? 0) - (b.createdAt ?? 0);
       });
 
-      if (snapshot.docChanges().some(change => change.type === "added")) {
-        const latestAdd = snapshot.docChanges().filter(change => change.type === "added").pop();
-        if (latestAdd) {
-          const r = latestAdd.doc.data();
-          showNotification(`New request: ${r.artist} — ${r.track} from ${r.name}`);
+      const added = snapshot.docChanges().filter(change => change.type === "added");
+      if (added.length) {
+        const latest = added[added.length - 1].doc.data();
+        let message = `New request: ${latest.artist} — ${latest.track} from ${latest.name}`;
+        if (currentEventData?.flagReturningRequesters && latest.returningRequester) {
+          message += ` · returning requester (${latest.returningRequesterCount || 1} past requests)`;
         }
+        if (latest.isDuplicate) {
+          message += ` · duplicate request`;
+        }
+        if (latest.tip > 0) {
+          message += ` · tipped $${latest.tip}`;
+        }
+        showNotification(message);
       } else {
         hideNotification();
       }
@@ -590,9 +648,6 @@ function listenRequests() {
 
 async function moveRequest(id, direction) {
   if (!db || !activeEventId) return;
-
-  const current = Array.from(document.querySelectorAll(".request-card"));
-  if (!current.length) return;
 
   const snapshot = await db.collection("requests").where("eventId", "==", activeEventId).get();
   const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -680,7 +735,7 @@ img{width:min(420px,86vw);height:auto}
 </head>
 <body>
 <div class="card">
-  <div class="eyebrow">SCAN TO REQUEST A SONG</div>
+  <div class="eyebrow">LIVE REQUESTS</div>
   <div class="title">${escapeHtml(name)}</div>
   <div class="meta">${escapeHtml(venue)}</div>
   <img src="${qrUrl}" alt="QR code" />
@@ -702,10 +757,6 @@ function setView(mode) {
   els.djSetupSection.classList.toggle("hidden", mode === "queue");
 }
 
-function resetDemo() {
-  location.reload();
-}
-
 window.moveRequest = moveRequest;
 window.deleteRequest = deleteRequest;
 window.respondToRequest = respondToRequest;
@@ -717,7 +768,6 @@ els.showQueueBtn.addEventListener("click", () => setView("queue"));
 els.copyLinkBtn.addEventListener("click", copyLink);
 els.downloadQrBtn.addEventListener("click", openQrImage);
 els.openFlyerBtn.addEventListener("click", openFlyerView);
-els.resetDemoBtn.addEventListener("click", resetDemo);
 els.loadLiveBtn.addEventListener("click", loadActiveEvent);
 
 setView("full");

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DJ Request - Requester Side</title>
+  <title>Live Requests</title>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -64,11 +64,12 @@
       padding:10px 12px;border-radius:12px;border:1px solid #283246;background:#0f141d;font-size:14px;cursor:pointer;transition:.18s ease;text-align:left;color:var(--text);
     }
     .helper{font-size:12px;color:var(--muted);line-height:1.5}
-    .success,.warning{
-      border-radius:12px;padding:12px 13px;font-size:14px
+    .success,.warning,.info{
+      border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5;
     }
     .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
     .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
+    .info{color:#ffd7b8;background:#1b1208;border:1px solid #7d4b21}
     .hidden{display:none!important}
     .primary-btn{
       appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;
@@ -96,6 +97,7 @@
       </div>
 
       <div id="requestClosedBox" class="warning hidden"></div>
+      <div id="duplicateBox" class="info hidden"></div>
       <div id="requestSuccessBox" class="success hidden"></div>
 
       <div class="requester-card">
@@ -113,7 +115,7 @@
         <label for="reqTrack" style="margin-top:10px;">Track title</label>
         <input id="reqTrack" placeholder="Track title" />
         <div class="suggestions" id="suggestionsBox"></div>
-        <div class="helper">This uses built-in sample suggestions for testing. Later this can be swapped to Spotify search.</div>
+        <div class="helper">Built-in suggestions plus duplicate detection for this event.</div>
       </div>
 
       <div class="requester-card">
@@ -124,7 +126,7 @@
           <button class="tip-btn" data-tip="5" type="button">$5</button>
           <button class="tip-btn" data-tip="10" type="button">$10</button>
         </div>
-        <div class="helper" style="margin-top:10px;">This is still just a test simulation. No real payments are attached yet.</div>
+        <div class="helper" style="margin-top:10px;">Tipped requests bypass the time limit and cutoff settings.</div>
       </div>
 
       <button class="primary-btn" id="submitRequestBtn" type="button">Submit Request</button>
@@ -133,7 +135,6 @@
 </aside>
 
 <script>
-// PASTE THE SAME FIREBASE VALUES HERE IN request.html
 const firebaseConfig = {
   apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
@@ -154,14 +155,18 @@ const sampleSuggestions = [
 
 let db = null;
 let currentEvent = null;
+let currentEventRequests = [];
+let unsubscribeCurrentRequests = null;
 let selectedTip = 0;
 
 const eventId = new URLSearchParams(window.location.search).get("event");
 
 const els = {
+  liveRequestsSubtitle: document.getElementById("liveRequestsSubtitle"),
   reqEventTitle: document.getElementById("reqEventTitle"),
   reqEventMeta: document.getElementById("reqEventMeta"),
   requestClosedBox: document.getElementById("requestClosedBox"),
+  duplicateBox: document.getElementById("duplicateBox"),
   requestSuccessBox: document.getElementById("requestSuccessBox"),
   reqName: document.getElementById("reqName"),
   reqEmail: document.getElementById("reqEmail"),
@@ -182,6 +187,14 @@ function escapeHtml(text) {
 
 function escapeJs(value) {
   return String(value).replaceAll("\\","\\\\").replaceAll("'","\\'");
+}
+
+function normalizeText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function requesterKey(email) {
+  return String(email || "").trim().toLowerCase();
 }
 
 function formatDateTime(dateObj) {
@@ -216,11 +229,38 @@ function hideClosed() {
   els.submitRequestBtn.disabled = false;
 }
 
+function updateDuplicateMessage() {
+  const artistNorm = normalizeText(els.reqArtist.value);
+  const trackNorm = normalizeText(els.reqTrack.value);
+
+  if (!artistNorm || !trackNorm) {
+    els.duplicateBox.classList.add("hidden");
+    return null;
+  }
+
+  const matches = currentEventRequests.filter(req =>
+    normalizeText(req.artist) === artistNorm &&
+    normalizeText(req.track) === trackNorm
+  );
+
+  if (!matches.length) {
+    els.duplicateBox.classList.add("hidden");
+    return null;
+  }
+
+  const first = matches[0];
+  const times = matches.length;
+  els.duplicateBox.textContent = times === 1
+    ? `This song was already requested for this event by ${first.name || "another guest"}. You can still submit it.`
+    : `This song has already been requested ${times} times for this event. You can still submit it.`;
+  els.duplicateBox.classList.remove("hidden");
+  return matches;
+}
+
 function renderEvent(eventData) {
   currentEvent = eventData;
   els.reqEventTitle.textContent = eventData.name || "Untitled Event";
-  document.getElementById("liveRequestsSubtitle").textContent =
-  "Request Your Songs for " + (eventData.name || "this event");
+  els.liveRequestsSubtitle.textContent = "Request Your Songs for " + (eventData.name || "this event");
   els.reqEventMeta.textContent = `${eventData.venue || "Venue not set"} · ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add event date/time"}`;
 
   const status = eventStatus(eventData);
@@ -261,6 +301,19 @@ function initFirebase() {
   }
 }
 
+function listenCurrentEventRequests() {
+  if (!db || !eventId) return;
+
+  if (unsubscribeCurrentRequests) unsubscribeCurrentRequests();
+
+  unsubscribeCurrentRequests = db.collection("requests")
+    .where("eventId", "==", eventId)
+    .onSnapshot(snapshot => {
+      currentEventRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      updateDuplicateMessage();
+    });
+}
+
 async function loadEvent() {
   if (!db) return;
   if (!eventId) {
@@ -279,6 +332,7 @@ async function loadEvent() {
       return;
     }
     renderEvent(doc.data());
+    listenCurrentEventRequests();
   } catch (err) {
     console.error(err);
     showClosed("Could not load the event.");
@@ -291,6 +345,7 @@ function filterSuggestions() {
   const q = `${qArtist} ${qTrack}`.trim();
   if (!q) {
     els.suggestionsBox.innerHTML = "";
+    updateDuplicateMessage();
     return;
   }
   const matches = sampleSuggestions
@@ -302,45 +357,101 @@ function filterSuggestions() {
       <strong>${escapeHtml(item.artist)}</strong> — ${escapeHtml(item.track)}
     </button>
   `).join("");
+
+  updateDuplicateMessage();
 }
 
 function applySuggestion(artist, track) {
   els.reqArtist.value = artist;
   els.reqTrack.value = track;
   els.suggestionsBox.innerHTML = "";
+  updateDuplicateMessage();
+}
+
+function validateRequestAgainstRules(email, tipped) {
+  if (!currentEvent) {
+    return "No event is loaded yet.";
+  }
+
+  if (eventStatus(currentEvent) !== "live") {
+    return "Requests are not open right now.";
+  }
+
+  if (!tipped) {
+    const cutoffMinutes = Number(currentEvent.cutoffMinutes || 0);
+    if (cutoffMinutes > 0) {
+      const cutoffAt = Number(currentEvent.endAt) - cutoffMinutes * 60 * 1000;
+      if (Date.now() >= cutoffAt) {
+        return `Requests are closed for this event because the cutoff is ${cutoffMinutes} minutes before the end of the show.`;
+      }
+    }
+
+    const limitMinutes = Number(currentEvent.requestLimitMinutes || 0);
+    const key = requesterKey(email);
+    if (limitMinutes > 0 && key) {
+      const windowStart = Date.now() - limitMinutes * 60 * 1000;
+      const recent = currentEventRequests.find(req =>
+        requesterKey(req.requesterKey || req.email) === key &&
+        Number(req.createdAt || 0) >= windowStart
+      );
+      if (recent) {
+        return `You can only make one request every ${limitMinutes} minutes for this event.`;
+      }
+    }
+  }
+
+  return null;
 }
 
 async function submitRequest() {
   if (!db || !currentEvent) return;
-  if (eventStatus(currentEvent) !== "live") {
-    alert("Requests are not open right now.");
-    return;
-  }
 
   const name = els.reqName.value.trim();
   const email = els.reqEmail.value.trim();
   const artist = els.reqArtist.value.trim();
   const track = els.reqTrack.value.trim();
+  const tipped = selectedTip > 0;
 
   if (!name || !email || !artist || !track) {
     alert("Please fill in name, email, artist, and track title.");
     return;
   }
 
+  const ruleError = validateRequestAgainstRules(email, tipped);
+  if (ruleError) {
+    alert(ruleError);
+    return;
+  }
+
   try {
-    const snapshot = await db.collection("requests").where("eventId", "==", eventId).get();
-    const sortOrder = snapshot.size;
+    const allByRequester = await db.collection("requests")
+      .where("requesterKey", "==", requesterKey(email))
+      .get();
+
+    const pastRequests = allByRequester.docs
+      .map(doc => doc.data())
+      .filter(req => req.eventId !== eventId);
+
+    const duplicateMatches = currentEventRequests.filter(req =>
+      normalizeText(req.artist) === normalizeText(artist) &&
+      normalizeText(req.track) === normalizeText(track)
+    );
 
     await db.collection("requests").add({
       eventId,
       name,
       email,
+      requesterKey: requesterKey(email),
       artist,
       track,
       tip: selectedTip,
       response: "",
       createdAt: Date.now(),
-      sortOrder
+      sortOrder: currentEventRequests.length,
+      isDuplicate: duplicateMatches.length > 0,
+      duplicateCount: duplicateMatches.length,
+      returningRequester: pastRequests.length > 0,
+      returningRequesterCount: pastRequests.length
     });
 
     els.requestSuccessBox.classList.remove("hidden");
@@ -348,6 +459,7 @@ async function submitRequest() {
     els.reqArtist.value = "";
     els.reqTrack.value = "";
     els.suggestionsBox.innerHTML = "";
+    updateDuplicateMessage();
   } catch (err) {
     console.error(err);
     alert("Could not submit request. Check the Firebase values and Firestore rules.");
