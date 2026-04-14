@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DJ Request - Requester Side</title>
+  <style>
+    :root{
+      --bg:#0a0b0f;
+      --panel:#12141b;
+      --panel-2:#171a22;
+      --line:#252938;
+      --text:#f3f5fb;
+      --muted:#9ba3b7;
+      --green:#3ddc84;
+      --yellow:#ffd166;
+      --blue:#7cc7ff;
+      --shadow:0 18px 50px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;padding:0;
+      background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      min-height:100vh;
+    }
+    body{display:flex;align-items:center;justify-content:center;padding:18px}
+    .phone-shell{
+      width:100%;max-width:430px;margin:0 auto;padding:14px;border-radius:34px;
+      background:linear-gradient(180deg,#0c0e13,#11151d);border:1px solid #2a3040;box-shadow:var(--shadow);
+    }
+    .phone-top{width:130px;height:24px;background:#050607;margin:0 auto 10px;border-radius:0 0 18px 18px}
+    .phone-screen{
+      min-height:780px;background:linear-gradient(180deg,#0e121a,#151a23);border-radius:24px;border:1px solid #2a3040;overflow:hidden;display:flex;flex-direction:column;
+    }
+    .requester-header{
+      padding:18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(61,220,132,.08),rgba(124,199,255,.03));
+    }
+    .requester-header h2{margin:0;font-size:22px}
+    .requester-header p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+    .requester-body{padding:18px;display:grid;gap:14px}
+    .requester-card{
+      background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px;
+    }
+    .requester-card h3{margin:0 0 8px;font-size:16px}
+    .event-lock{font-size:14px;line-height:1.5;color:var(--muted)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input{
+      width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);
+      border-radius:12px;padding:12px 13px;font-size:15px;outline:none;
+    }
+    .tip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .tip-btn{
+      appearance:none;border:1px solid #2d3648;background:#151a24;color:var(--text);border-radius:12px;padding:12px 8px;font-size:14px;font-weight:800;cursor:pointer;
+    }
+    .tip-btn.active{background:rgba(61,220,132,.13);border-color:#2f8e5c;color:#c9f8dd}
+    .suggestions{display:grid;gap:6px;margin-top:8px}
+    .suggestion{
+      padding:10px 12px;border-radius:12px;border:1px solid #283246;background:#0f141d;font-size:14px;cursor:pointer;transition:.18s ease;text-align:left;color:var(--text);
+    }
+    .helper{font-size:12px;color:var(--muted);line-height:1.5}
+    .success,.warning{
+      border-radius:12px;padding:12px 13px;font-size:14px
+    }
+    .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
+    .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
+    .hidden{display:none!important}
+    .primary-btn{
+      appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;
+      padding:12px 14px;border-radius:12px;font-size:14px;background:var(--green);color:#08100b;
+    }
+    @media (max-width:760px){
+      .tip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .phone-screen{min-height:auto}
+    }
+  </style>
+</head>
+<body>
+<aside class="phone-shell">
+  <div class="phone-top"></div>
+  <div class="phone-screen">
+    <div class="requester-header">
+      <h2>Request a Song</h2>
+      <p>This is the public mobile layout. It only shows the request form and event details.</p>
+    </div>
+
+    <div class="requester-body">
+      <div class="requester-card">
+        <h3 id="reqEventTitle">No event loaded</h3>
+        <div class="event-lock" id="reqEventMeta">Open this page from the DJ's request link or QR code.</div>
+      </div>
+
+      <div id="requestClosedBox" class="warning hidden"></div>
+      <div id="requestSuccessBox" class="success hidden"></div>
+
+      <div class="requester-card">
+        <h3>Your info</h3>
+        <label for="reqName">Name</label>
+        <input id="reqName" placeholder="Your name" />
+        <label for="reqEmail" style="margin-top:10px;">Email</label>
+        <input id="reqEmail" type="email" placeholder="you@email.com" />
+      </div>
+
+      <div class="requester-card">
+        <h3>Song request</h3>
+        <label for="reqArtist">Artist</label>
+        <input id="reqArtist" placeholder="Start typing an artist..." />
+        <label for="reqTrack" style="margin-top:10px;">Track title</label>
+        <input id="reqTrack" placeholder="Track title" />
+        <div class="suggestions" id="suggestionsBox"></div>
+        <div class="helper">This uses built-in sample suggestions for testing. Later this can be swapped to Spotify search.</div>
+      </div>
+
+      <div class="requester-card">
+        <h3>Tip to move up the queue</h3>
+        <div class="tip-grid">
+          <button class="tip-btn active" data-tip="0" type="button">$0</button>
+          <button class="tip-btn" data-tip="2" type="button">$2</button>
+          <button class="tip-btn" data-tip="5" type="button">$5</button>
+          <button class="tip-btn" data-tip="10" type="button">$10</button>
+        </div>
+        <div class="helper" style="margin-top:10px;">This is still just a test simulation. No real payments are attached yet.</div>
+      </div>
+
+      <button class="primary-btn" id="submitRequestBtn" type="button">Submit Request</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+const STORAGE_KEY = "dj_request_split_state_v1";
+
+const sampleSuggestions = [
+  { artist: "Daft Punk", track: "One More Time" },
+  { artist: "Drake", track: "One Dance" },
+  { artist: "Avicii", track: "Levels" },
+  { artist: "Calvin Harris", track: "I'm Not Alone" },
+  { artist: "Disclosure", track: "Latch" },
+  { artist: "Rihanna", track: "We Found Love" },
+  { artist: "Swedish House Mafia", track: "Don't You Worry Child" },
+  { artist: "Robin S", track: "Show Me Love" }
+];
+
+let state = loadState();
+let selectedTip = 0;
+
+const els = {
+  reqEventTitle: document.getElementById("reqEventTitle"),
+  reqEventMeta: document.getElementById("reqEventMeta"),
+  requestClosedBox: document.getElementById("requestClosedBox"),
+  requestSuccessBox: document.getElementById("requestSuccessBox"),
+  reqName: document.getElementById("reqName"),
+  reqEmail: document.getElementById("reqEmail"),
+  reqArtist: document.getElementById("reqArtist"),
+  reqTrack: document.getElementById("reqTrack"),
+  suggestionsBox: document.getElementById("suggestionsBox"),
+  submitRequestBtn: document.getElementById("submitRequestBtn"),
+  tipButtons: Array.from(document.querySelectorAll(".tip-btn"))
+};
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); } catch (e) {}
+  }
+  return { event: null, requests: [], lastNotificationText: "" };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function escapeJs(value) {
+  return String(value).replaceAll("\\","\\\\").replaceAll("'","\\'");
+}
+
+function buildEventDateTimes(event) {
+  if (!event || !event.date || !event.startTime || !event.endTime) return null;
+  const start = new Date(`${event.date}T${event.startTime}`);
+  const end = new Date(`${event.date}T${event.endTime}`);
+  return { start, end };
+}
+
+function formatDateTime(dateObj) {
+  if (!(dateObj instanceof Date) || isNaN(dateObj)) return "Invalid date";
+  return dateObj.toLocaleString([], {
+    year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"
+  });
+}
+
+function getEventStatus(event) {
+  if (!event) return "none";
+  const dt = buildEventDateTimes(event);
+  if (!dt) return "draft";
+  const now = new Date();
+  if (now < dt.start) return "upcoming";
+  if (now > dt.end) return "ended";
+  return "live";
+}
+
+function syncTipButtons() {
+  els.tipButtons.forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.tip) === selectedTip);
+  });
+}
+
+function render() {
+  const event = state.event;
+  if (!event) {
+    els.reqEventTitle.textContent = "No event loaded";
+    els.reqEventMeta.textContent = "Open this page from the DJ's request link or QR code.";
+    els.requestClosedBox.classList.remove("hidden");
+    els.requestClosedBox.textContent = "Requests are unavailable until the DJ creates an event.";
+    els.submitRequestBtn.disabled = true;
+    syncTipButtons();
+    return;
+  }
+
+  const status = getEventStatus(event);
+  const dt = buildEventDateTimes(event);
+  els.reqEventTitle.textContent = event.name || "Untitled Event";
+  els.reqEventMeta.textContent = `${event.venue || "Venue not set"} · ${dt ? `${formatDateTime(dt.start)} – ${formatDateTime(dt.end)}` : "Add event date/time"}`;
+
+  if (status !== "live") {
+    els.requestClosedBox.classList.remove("hidden");
+    els.requestClosedBox.textContent = status === "upcoming"
+      ? "Requests are closed right now. This event has not started yet."
+      : status === "ended"
+        ? "Requests are closed. This event has already ended."
+        : "Requests are unavailable until the DJ fills in the event time window.";
+    els.submitRequestBtn.disabled = true;
+  } else {
+    els.requestClosedBox.classList.add("hidden");
+    els.submitRequestBtn.disabled = false;
+  }
+  syncTipButtons();
+}
+
+function filterSuggestions() {
+  const qArtist = els.reqArtist.value.trim().toLowerCase();
+  const qTrack = els.reqTrack.value.trim().toLowerCase();
+  const q = `${qArtist} ${qTrack}`.trim();
+  if (!q) {
+    els.suggestionsBox.innerHTML = "";
+    return;
+  }
+  const matches = sampleSuggestions
+    .filter(item => `${item.artist} ${item.track}`.toLowerCase().includes(q))
+    .slice(0,5);
+
+  els.suggestionsBox.innerHTML = matches.map(item => `
+    <button class="suggestion" type="button" onclick="applySuggestion('${escapeJs(item.artist)}','${escapeJs(item.track)}')">
+      <strong>${escapeHtml(item.artist)}</strong> — ${escapeHtml(item.track)}
+    </button>
+  `).join("");
+}
+
+function applySuggestion(artist, track) {
+  els.reqArtist.value = artist;
+  els.reqTrack.value = track;
+  els.suggestionsBox.innerHTML = "";
+}
+
+function submitRequest() {
+  const event = state.event;
+  if (!event) {
+    alert("No event is loaded yet.");
+    return;
+  }
+  if (getEventStatus(event) !== "live") {
+    alert("Requests are not open right now.");
+    return;
+  }
+
+  const name = els.reqName.value.trim();
+  const email = els.reqEmail.value.trim();
+  const artist = els.reqArtist.value.trim();
+  const track = els.reqTrack.value.trim();
+
+  if (!name || !email || !artist || !track) {
+    alert("Please fill in name, email, artist, and track title.");
+    return;
+  }
+
+  state.requests.push({
+    id: "req_" + Math.random().toString(36).slice(2,10),
+    name, email, artist, track,
+    tip: selectedTip,
+    response: "",
+    createdAt: Date.now()
+  });
+  state.lastNotificationText = `New request: ${artist} — ${track} from ${name}`;
+  saveState();
+
+  els.requestSuccessBox.classList.remove("hidden");
+  els.requestSuccessBox.textContent = `Submitted: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`;
+  els.reqArtist.value = "";
+  els.reqTrack.value = "";
+  els.suggestionsBox.innerHTML = "";
+}
+
+window.addEventListener("storage", (event) => {
+  if (event.key === STORAGE_KEY && event.newValue) {
+    try {
+      state = JSON.parse(event.newValue);
+      render();
+    } catch (e) {}
+  }
+});
+
+els.reqArtist.addEventListener("input", filterSuggestions);
+els.reqTrack.addEventListener("input", filterSuggestions);
+els.submitRequestBtn.addEventListener("click", submitRequest);
+
+els.tipButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedTip = Number(btn.dataset.tip || 0);
+    syncTipButtons();
+  });
+});
+
+window.applySuggestion = applySuggestion;
+
+render();
+</script>
+</body>
+</html>

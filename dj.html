@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DJ Request - DJ Side</title>
+  <style>
+    :root{
+      --bg:#0a0b0f;
+      --panel:#12141b;
+      --panel-2:#171a22;
+      --line:#252938;
+      --text:#f3f5fb;
+      --muted:#9ba3b7;
+      --green:#3ddc84;
+      --red:#ff6b6b;
+      --blue:#7cc7ff;
+      --shadow:0 18px 50px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;padding:0;
+      background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    body{min-height:100vh}
+    .app{max-width:1300px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      margin-bottom:18px;flex-wrap:wrap;
+    }
+    .brand h1{margin:0;font-size:26px;line-height:1.05}
+    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .view-toggle{
+      display:flex;gap:8px;background:rgba(255,255,255,.04);
+      border:1px solid var(--line);padding:6px;border-radius:999px;flex-wrap:wrap;
+    }
+    .view-toggle button,.ghost-btn,.primary-btn,.danger-btn,.tiny-btn{
+      appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;
+    }
+    .view-toggle button{
+      padding:10px 16px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px;
+    }
+    .view-toggle button.active{background:var(--green);color:#07110b}
+    .panel{
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    }
+    .panel-header{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      padding:18px 18px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+    }
+    .panel-header h2{margin:0;font-size:18px}
+    .panel-header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .panel-body{padding:18px}
+    .grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input{
+      width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);
+      border-radius:12px;padding:12px 13px;font-size:15px;outline:none;
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}
+    .primary-btn{background:var(--green);color:#08100b}
+    .ghost-btn{background:#1a1f2a;color:var(--text);border:1px solid #2c3345}
+    .danger-btn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}
+    .tiny-btn{padding:7px 10px;border-radius:10px;font-size:12px;background:#1b202b;color:var(--text);border:1px solid #2c3345}
+    .event-banner{
+      display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px;
+      border:1px solid #263246;background:linear-gradient(180deg,rgba(124,199,255,.08),rgba(61,220,132,.05));
+      border-radius:14px;margin-bottom:16px;flex-wrap:wrap;
+    }
+    .event-banner h3{margin:0;font-size:17px}
+    .event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.5}
+    .badge{
+      display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;
+      background:#121826;border:1px solid #263246;color:#d6ecff;font-size:12px;font-weight:700;white-space:nowrap;
+    }
+    .badge.live{color:#b9ffd5;border-color:#1f6f45;background:#0f1b15}
+    .badge.closed{color:#ffcdcd;border-color:#70303a;background:#181014}
+    .requester-card{
+      background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px;
+    }
+    .requester-card h3{margin:0 0 8px;font-size:16px}
+    .helper{font-size:12px;color:var(--muted);line-height:1.5}
+    .split-stack{display:grid;gap:18px}
+    .request-list{display:grid;gap:12px}
+    .request-card{
+      border:1px solid #283041;background:#0f131b;border-radius:16px;padding:14px;
+    }
+    .request-head{
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;
+    }
+    .request-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .request-title strong{font-size:17px;line-height:1.2;word-break:break-word}
+    .request-sub{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word}
+    .pill{
+      display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      background:#172116;color:#aaf4c8;border:1px solid #2f6140;
+    }
+    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .success{
+      color:#bff7d5;background:#0f1b14;border:1px solid #246943;border-radius:12px;padding:12px 13px;font-size:14px;
+    }
+    .hidden{display:none!important}
+    .empty{
+      border:1px dashed #31384a;padding:24px;border-radius:16px;color:var(--muted);
+      text-align:center;background:rgba(255,255,255,.02);
+    }
+    .qr-wrap{
+      display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start;margin-top:14px;
+    }
+    .qr-card{
+      background:#fff;color:#111;border-radius:18px;padding:14px;display:grid;gap:10px;justify-items:center;align-content:start;min-height:316px;
+    }
+    .qr-card img{width:200px;height:200px;object-fit:contain;border-radius:10px;background:#fff}
+    .flyer-card{
+      background:#10151e;border:1px solid #283246;border-radius:18px;padding:18px;display:grid;gap:12px;
+    }
+    .flyer-preview{
+      background:#fff;color:#111;border-radius:18px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center;
+    }
+    .flyer-preview .big{font-size:28px;font-weight:900;letter-spacing:.3px}
+    .flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}
+    .flyer-preview img{width:220px;height:220px;object-fit:contain}
+    .flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
+    @media (max-width:900px){
+      .qr-wrap,.grid-2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>DJ Request</h1>
+      <p>DJ side with event setup, QR/flyer tools, and requests-only queue view.</p>
+    </div>
+    <div class="view-toggle">
+      <button id="showFullBtn" class="active" type="button">Full DJ View</button>
+      <button id="showQueueBtn" type="button">Requests Only</button>
+      <button id="resetDemoBtn" type="button">Reset Demo</button>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <h2>DJ / Event Side</h2>
+        <p>Create the event, generate the QR-style link, and manage the queue.</p>
+      </div>
+      <div class="row">
+        <button class="ghost-btn" id="demoDataBtn" type="button">Load Demo Event</button>
+      </div>
+    </div>
+
+    <div class="panel-body split-stack">
+      <div id="djSetupSection">
+        <div class="event-banner" id="activeEventBanner">
+          <div>
+            <h3>No active event yet</h3>
+            <div class="meta">Create an event below, then use the public request link on your phone.</div>
+          </div>
+          <span class="badge closed">No Event</span>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label for="eventName">Event name</label>
+            <input id="eventName" placeholder="Friday Night Open Format" />
+          </div>
+          <div>
+            <label for="eventVenue">Location / venue</label>
+            <input id="eventVenue" placeholder="Club X" />
+          </div>
+          <div>
+            <label for="eventDate">Date</label>
+            <input id="eventDate" type="date" />
+          </div>
+          <div>
+            <label for="eventStart">Start time</label>
+            <input id="eventStart" type="time" />
+          </div>
+          <div>
+            <label for="eventEnd">End time</label>
+            <input id="eventEnd" type="time" />
+          </div>
+          <div>
+            <label for="djName">DJ name</label>
+            <input id="djName" placeholder="DJ Tripp" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="primary-btn" id="saveEventBtn" type="button">Save / Update Event</button>
+          <button class="ghost-btn" id="setLiveNowBtn" type="button">Make Event Live Now</button>
+        </div>
+
+        <div class="requester-card" style="margin-top:14px;">
+          <h3>Requester link for QR code</h3>
+          <div class="helper">This is the public page requesters should open or scan.</div>
+          <input id="eventLink" readonly value="Create an event first" style="margin-top:10px;" />
+        </div>
+
+        <div class="qr-wrap">
+          <div class="qr-card">
+            <div style="font-weight:900; font-size:14px;">QR CODE</div>
+            <img id="qrImage" alt="Event QR code" />
+            <div id="qrCaption" style="font-size:12px; color:#555; text-align:center;">Create an event to generate the QR code.</div>
+          </div>
+
+          <div class="flyer-card">
+            <h3 style="margin:0;">Screen / flyer version</h3>
+            <div class="helper">Clean QR block you can screenshot, print, or open in a separate window.</div>
+
+            <div class="flyer-preview" id="flyerPreview">
+              <div class="big" id="flyerTitle">Scan to Request a Song</div>
+              <img id="flyerQrImage" alt="Flyer QR code" />
+              <div class="small" id="flyerMeta">Create an event to generate the flyer-ready QR.</div>
+            </div>
+
+            <div class="flyer-actions">
+              <button class="primary-btn" id="openFlyerBtn" type="button">Open Flyer View</button>
+              <button class="ghost-btn" id="downloadQrBtn" type="button">Open QR Image</button>
+              <button class="ghost-btn" id="copyLinkBtn" type="button">Copy Request Link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="djQueueSection">
+        <div class="panel-header" style="padding:0 0 14px; border:none;">
+          <div>
+            <h2>Live Queue</h2>
+            <p>Artist is shown first, then track title.</p>
+          </div>
+          <div class="row">
+            <span class="badge" id="requestCountBadge">0 Requests</span>
+            <span class="badge" id="notificationBadge">No New Requests</span>
+          </div>
+        </div>
+
+        <div id="notificationBox" class="success hidden"></div>
+        <div id="queueList" class="request-list"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORAGE_KEY = "dj_request_split_state_v1";
+
+let state = loadState();
+
+const els = {
+  showFullBtn: document.getElementById("showFullBtn"),
+  showQueueBtn: document.getElementById("showQueueBtn"),
+  resetDemoBtn: document.getElementById("resetDemoBtn"),
+  demoDataBtn: document.getElementById("demoDataBtn"),
+  djSetupSection: document.getElementById("djSetupSection"),
+  djQueueSection: document.getElementById("djQueueSection"),
+  eventName: document.getElementById("eventName"),
+  eventVenue: document.getElementById("eventVenue"),
+  eventDate: document.getElementById("eventDate"),
+  eventStart: document.getElementById("eventStart"),
+  eventEnd: document.getElementById("eventEnd"),
+  djName: document.getElementById("djName"),
+  saveEventBtn: document.getElementById("saveEventBtn"),
+  setLiveNowBtn: document.getElementById("setLiveNowBtn"),
+  activeEventBanner: document.getElementById("activeEventBanner"),
+  eventLink: document.getElementById("eventLink"),
+  queueList: document.getElementById("queueList"),
+  requestCountBadge: document.getElementById("requestCountBadge"),
+  notificationBox: document.getElementById("notificationBox"),
+  notificationBadge: document.getElementById("notificationBadge"),
+  qrImage: document.getElementById("qrImage"),
+  qrCaption: document.getElementById("qrCaption"),
+  flyerQrImage: document.getElementById("flyerQrImage"),
+  flyerTitle: document.getElementById("flyerTitle"),
+  flyerMeta: document.getElementById("flyerMeta"),
+  openFlyerBtn: document.getElementById("openFlyerBtn"),
+  downloadQrBtn: document.getElementById("downloadQrBtn"),
+  copyLinkBtn: document.getElementById("copyLinkBtn")
+};
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); } catch (e) {}
+  }
+  return { event: null, requests: [], lastNotificationText: "" };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function uid(prefix="id") {
+  return prefix + "_" + Math.random().toString(36).slice(2,10);
+}
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function buildEventDateTimes(event) {
+  if (!event || !event.date || !event.startTime || !event.endTime) return null;
+  const start = new Date(`${event.date}T${event.startTime}`);
+  const end = new Date(`${event.date}T${event.endTime}`);
+  return { start, end };
+}
+
+function formatDateTime(dateObj) {
+  if (!(dateObj instanceof Date) || isNaN(dateObj)) return "Invalid date";
+  return dateObj.toLocaleString([], {
+    year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"
+  });
+}
+
+function getEventStatus(event) {
+  if (!event) return "none";
+  const dt = buildEventDateTimes(event);
+  if (!dt) return "draft";
+  const now = new Date();
+  if (now < dt.start) return "upcoming";
+  if (now > dt.end) return "ended";
+  return "live";
+}
+
+function getRequesterLink() {
+  if (!state.event) return "";
+  const requestUrl = new URL("request.html", window.location.href);
+  requestUrl.searchParams.set("event", state.event.id);
+  return requestUrl.toString();
+}
+
+function getQrUrl() {
+  const link = getRequesterLink();
+  if (!link) return "";
+  return `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=20&data=${encodeURIComponent(link)}`;
+}
+
+function renderEventForm() {
+  const e = state.event;
+  els.eventName.value = e?.name || "";
+  els.eventVenue.value = e?.venue || "";
+  els.eventDate.value = e?.date || "";
+  els.eventStart.value = e?.startTime || "";
+  els.eventEnd.value = e?.endTime || "";
+  els.djName.value = e?.djName || "";
+}
+
+function renderEventBanner() {
+  const e = state.event;
+  if (!e) {
+    els.activeEventBanner.innerHTML = `
+      <div>
+        <h3>No active event yet</h3>
+        <div class="meta">Create an event below, then use the public request link on your phone.</div>
+      </div>
+      <span class="badge closed">No Event</span>
+    `;
+    els.eventLink.value = "Create an event first";
+    return;
+  }
+
+  const dt = buildEventDateTimes(e);
+  const status = getEventStatus(e);
+  const badgeClass = status === "live" ? "badge live" : (status === "ended" ? "badge closed" : "badge");
+  const badgeText = status === "live" ? "Live Now" : status === "ended" ? "Ended" : "Upcoming";
+
+  els.activeEventBanner.innerHTML = `
+    <div>
+      <h3>${escapeHtml(e.name || "Untitled Event")}</h3>
+      <div class="meta">
+        ${escapeHtml(e.venue || "No venue")}<br>
+        DJ: ${escapeHtml(e.djName || "Not set")}<br>
+        ${dt ? `${formatDateTime(dt.start)} – ${formatDateTime(dt.end)}` : "Add date/time"}
+      </div>
+    </div>
+    <span class="${badgeClass}">${badgeText}</span>
+  `;
+  els.eventLink.value = getRequesterLink();
+}
+
+function renderQr() {
+  const e = state.event;
+  if (!e) {
+    els.qrImage.removeAttribute("src");
+    els.flyerQrImage.removeAttribute("src");
+    els.qrCaption.textContent = "Create an event to generate the QR code.";
+    els.flyerTitle.textContent = "Scan to Request a Song";
+    els.flyerMeta.textContent = "Create an event to generate the flyer-ready QR.";
+    return;
+  }
+  const qrUrl = getQrUrl();
+  const dt = buildEventDateTimes(e);
+  const when = dt ? formatDateTime(dt.start) : "";
+  els.qrImage.src = qrUrl;
+  els.flyerQrImage.src = qrUrl;
+  els.qrCaption.textContent = e.name;
+  els.flyerTitle.textContent = e.name;
+  els.flyerMeta.textContent = `${e.venue} • ${when}`;
+}
+
+function renderQueue() {
+  const requests = [...(state.requests || [])];
+  els.requestCountBadge.textContent = `${requests.length} Request${requests.length === 1 ? "" : "s"}`;
+
+  if (!requests.length) {
+    els.queueList.innerHTML = `<div class="empty">No requests yet. Use request.html to submit a few test songs.</div>`;
+    return;
+  }
+
+  els.queueList.innerHTML = requests.map((req, idx) => `
+    <div class="request-card">
+      <div class="request-head">
+        <div class="request-title">
+          <strong>${escapeHtml(req.artist)}</strong>
+          <strong style="font-size:15px; font-weight:600; color:#d5d9e6;">${escapeHtml(req.track)}</strong>
+          <div class="request-sub">
+            Requested by ${escapeHtml(req.name)} · ${escapeHtml(req.email)}<br>
+            Position ${idx + 1}
+          </div>
+        </div>
+        <span class="pill">Queue</span>
+      </div>
+
+      ${req.response ? `<div class="requester-card" style="padding:10px 12px; border-radius:12px; background:#101723;"><strong style="font-size:12px; color:#9bc5ff;">DJ Response</strong><div style="margin-top:4px; font-size:14px;">${escapeHtml(req.response)}</div></div>` : ""}
+
+      <div class="request-actions">
+        <button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Move Up</button>
+        <button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Move Down</button>
+        <button class="tiny-btn" onclick="respondToRequest('${req.id}')" type="button">Respond</button>
+        <button class="danger-btn" style="padding:7px 10px; font-size:12px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderNotifications() {
+  const txt = state.lastNotificationText || "";
+  if (txt) {
+    els.notificationBox.classList.remove("hidden");
+    els.notificationBox.textContent = txt;
+    els.notificationBadge.textContent = "New Request";
+  } else {
+    els.notificationBox.classList.add("hidden");
+    els.notificationBadge.textContent = "No New Requests";
+  }
+}
+
+function renderAll() {
+  renderEventForm();
+  renderEventBanner();
+  renderQr();
+  renderQueue();
+  renderNotifications();
+  saveState();
+}
+
+function createOrUpdateEvent(forceLive=false) {
+  const existingId = state.event?.id || uid("event");
+  const data = {
+    id: existingId,
+    name: els.eventName.value.trim(),
+    venue: els.eventVenue.value.trim(),
+    date: els.eventDate.value,
+    startTime: els.eventStart.value,
+    endTime: els.eventEnd.value,
+    djName: els.djName.value.trim()
+  };
+
+  if (!data.name || !data.venue || !data.date || !data.startTime || !data.endTime) {
+    alert("Please fill in event name, venue, date, start time, and end time.");
+    return;
+  }
+
+  if (forceLive) {
+    const now = new Date();
+    const date = now.toISOString().slice(0,10);
+    const start = new Date(now.getTime() - 60*60*1000);
+    const end = new Date(now.getTime() + 2*60*60*1000);
+    data.date = date;
+    data.startTime = start.toTimeString().slice(0,5);
+    data.endTime = end.toTimeString().slice(0,5);
+  }
+
+  state.event = data;
+  state.lastNotificationText = "";
+  renderAll();
+}
+
+function addDemoData() {
+  const now = new Date();
+  const date = now.toISOString().slice(0,10);
+  const start = new Date(now.getTime() - 30*60*1000);
+  const end = new Date(now.getTime() + 3*60*60*1000);
+
+  state.event = {
+    id: "demo_live_event",
+    name: "Friday Night Open Format",
+    venue: "Club X",
+    date,
+    startTime: start.toTimeString().slice(0,5),
+    endTime: end.toTimeString().slice(0,5),
+    djName: "DJ Tripp"
+  };
+  state.requests = [
+    { id: uid("req"), name: "Alex", email: "alex@email.com", artist: "Robin S", track: "Show Me Love", response: "" },
+    { id: uid("req"), name: "Mia", email: "mia@email.com", artist: "Daft Punk", track: "One More Time", response: "I got you. Keeping an eye on the floor." }
+  ];
+  state.lastNotificationText = "Demo event loaded. Queue is ready for testing.";
+  renderAll();
+}
+
+function moveRequest(id, direction) {
+  const idx = state.requests.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  const swapWith = idx + direction;
+  if (swapWith < 0 || swapWith >= state.requests.length) return;
+  const [item] = state.requests.splice(idx, 1);
+  state.requests.splice(swapWith, 0, item);
+  state.lastNotificationText = "";
+  renderAll();
+}
+
+function deleteRequest(id) {
+  state.requests = state.requests.filter(r => r.id !== id);
+  state.lastNotificationText = "";
+  renderAll();
+}
+
+function respondToRequest(id) {
+  const req = state.requests.find(r => r.id === id);
+  if (!req) return;
+  const reply = prompt(`Response to ${req.name}:`, req.response || "");
+  if (reply === null) return;
+  req.response = reply.trim();
+  state.lastNotificationText = "";
+  renderAll();
+}
+
+async function copyLink() {
+  const link = getRequesterLink();
+  if (!link) {
+    alert("Create an event first.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(link);
+    state.lastNotificationText = "Request link copied.";
+    renderNotifications();
+  } catch (e) {
+    prompt("Copy this link:", link);
+  }
+}
+
+function openQrImage() {
+  const qrUrl = getQrUrl();
+  if (!qrUrl) {
+    alert("Create an event first.");
+    return;
+  }
+  window.open(qrUrl, "_blank");
+}
+
+function openFlyerView() {
+  if (!state.event) {
+    alert("Create an event first.");
+    return;
+  }
+  const qrUrl = getQrUrl();
+  const e = state.event;
+  const dt = buildEventDateTimes(e);
+  const when = dt ? formatDateTime(dt.start) : "";
+  const flyerHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escapeHtml(e.name)} QR Flyer</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}
+.card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}
+.eyebrow{font-size:18px;font-weight:800;letter-spacing:.12em;color:#555;margin-bottom:8px}
+.title{font-size:42px;font-weight:900;line-height:1.05;margin-bottom:10px}
+.meta{font-size:20px;color:#444;margin-bottom:26px;line-height:1.45}
+img{width:min(420px,86vw);height:auto}
+.footer{margin-top:20px;font-size:20px;font-weight:700}
+.link{margin-top:12px;font-size:12px;color:#666;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">SCAN TO REQUEST A SONG</div>
+  <div class="title">${escapeHtml(e.name)}</div>
+  <div class="meta">${escapeHtml(e.venue)}<br>${escapeHtml(when)}</div>
+  <img src="${qrUrl}" alt="QR code" />
+  <div class="footer">Open your camera and scan</div>
+  <div class="link">${escapeHtml(getRequesterLink())}</div>
+</div>
+</body>
+</html>`;
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.open();
+  win.document.write(flyerHtml);
+  win.document.close();
+}
+
+function resetDemo() {
+  if (!confirm("Reset the DJ page and clear saved demo data?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { event: null, requests: [], lastNotificationText: "" };
+  renderAll();
+}
+
+function setView(mode) {
+  els.showFullBtn.classList.toggle("active", mode === "full");
+  els.showQueueBtn.classList.toggle("active", mode === "queue");
+  els.djSetupSection.classList.toggle("hidden", mode === "queue");
+}
+
+window.moveRequest = moveRequest;
+window.deleteRequest = deleteRequest;
+window.respondToRequest = respondToRequest;
+
+window.addEventListener("storage", (event) => {
+  if (event.key === STORAGE_KEY && event.newValue) {
+    try {
+      state = JSON.parse(event.newValue);
+      renderAll();
+    } catch (e) {}
+  }
+});
+
+els.saveEventBtn.addEventListener("click", () => createOrUpdateEvent(false));
+els.setLiveNowBtn.addEventListener("click", () => createOrUpdateEvent(true));
+els.demoDataBtn.addEventListener("click", addDemoData);
+els.resetDemoBtn.addEventListener("click", resetDemo);
+els.showFullBtn.addEventListener("click", () => setView("full"));
+els.showQueueBtn.addEventListener("click", () => setView("queue"));
+els.copyLinkBtn.addEventListener("click", copyLink);
+els.downloadQrBtn.addEventListener("click", openQrImage);
+els.openFlyerBtn.addEventListener("click", openFlyerView);
+
+renderAll();
+setView("full");
+</script>
+</body>
+</html>
