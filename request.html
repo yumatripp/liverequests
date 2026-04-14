@@ -85,8 +85,8 @@
   <div class="phone-top"></div>
   <div class="phone-screen">
     <div class="requester-header">
-      <h2>Request a Song</h2>
-      <p>This is the public mobile layout. It only shows the request form and event details.</p>
+      <h2>Live Requests</h2>
+      <p id="liveRequestsSubtitle">Request Your Songs</p>
     </div>
 
     <div class="requester-body">
@@ -219,6 +219,8 @@ function hideClosed() {
 function renderEvent(eventData) {
   currentEvent = eventData;
   els.reqEventTitle.textContent = eventData.name || "Untitled Event";
+  document.getElementById("liveRequestsSubtitle").textContent =
+  "Request Your Songs for " + (eventData.name || "this event");
   els.reqEventMeta.textContent = `${eventData.venue || "Venue not set"} · ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add event date/time"}`;
 
   const status = eventStatus(eventData);
