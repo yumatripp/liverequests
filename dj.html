@@ -7,6 +7,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <style>
     :root{
@@ -177,7 +178,8 @@
       <button id="showFullBtn" class="active" type="button">Full DJ View</button>
       <button id="showQueueBtn" type="button">Requests Only</button>
       <button id="newEventBtn" type="button">Create New Event</button>
-      <button id="loadLiveBtn" type="button">Load Active Event</button>
+      <button id="loadLiveBtn" type="button">Load My Events</button>
+      <button id="logoutBtn" type="button">Logout</button>
     </div>
   </div>
 
@@ -382,6 +384,8 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
+let currentUser = null;
 let unsubscribeRequests = null;
 let unsubscribeEventList = null;
 let activeEventId = null;
@@ -395,6 +399,7 @@ const els = {
   showFullBtn: document.getElementById("showFullBtn"),
   showQueueBtn: document.getElementById("showQueueBtn"),
   loadLiveBtn: document.getElementById("loadLiveBtn"),
+  logoutBtn: document.getElementById("logoutBtn"),
   newEventBtn: document.getElementById("newEventBtn"),
   djSetupSection: document.getElementById("djSetupSection"),
   eventName: document.getElementById("eventName"),
@@ -569,11 +574,11 @@ function renderEventList(events) {
 }
 
 async function refreshEventList(selectNewest=false) {
-  if (!db) return;
+  if (!db || !currentUser) return;
   try {
-    const snap = await db.collection('events').where('endAt','>=', Date.now() - 86400000).get();
+    const snap = await db.collection('events').where('ownerUid','==', currentUser.uid).get();
     const events = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a,b) => (a.startAt || 0) - (b.startAt || 0));
+      .sort((a,b) => (b.startAt || 0) - (a.startAt || 0));
     renderEventList(events);
     if (selectNewest && events.length) {
       const chosen = events[events.length - 1];
@@ -855,7 +860,17 @@ function initFirebase() {
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    auth = firebase.auth();
     hideStatus();
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = user;
+      hideStatus();
+      await loadActiveEvent();
+    });
     return true;
   } catch (err) {
     console.error(err);
@@ -880,6 +895,8 @@ async function saveEvent(forceLive=false) {
       activeEventId = "event_" + Date.now();
     }
 
+    data.ownerUid = currentUser.uid;
+    data.ownerEmail = currentUser.email || "";
     await db.collection("events").doc(activeEventId).set(data, { merge: true });
 
     if (recurrenceType === 'weekly' && recurrenceCount > 1) {
@@ -893,6 +910,8 @@ async function saveEvent(forceLive=false) {
         const recurId = `${seriesId}_w${i+1}`;
         await db.collection('events').doc(recurId).set({
           ...data,
+          ownerUid: currentUser.uid,
+          ownerEmail: currentUser.email || '',
           date: new Date(startAt).toISOString().slice(0,10),
           startTime: startDate.toTimeString().slice(0,5),
           endTime: endDate.toTimeString().slice(0,5),
@@ -918,13 +937,13 @@ async function saveEvent(forceLive=false) {
 }
 
 async function loadActiveEvent() {
-  if (!db) return;
+  if (!db || !currentUser) return;
 
   try {
     await refreshEventList(false);
-    const snap = await db.collection("events").where("endAt", ">=", Date.now() - 86400000).get();
+    const snap = await db.collection("events").where("ownerUid", "==", currentUser.uid).get();
     const events = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a,b) => (a.startAt || 0) - (b.startAt || 0));
+      .sort((a,b) => (b.startAt || 0) - (a.startAt || 0));
     if (!events.length) {
       showStatus("No live or upcoming events found yet. Create one first.");
       return;
