@@ -12,110 +12,64 @@
     body{
       margin:0;
       font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);
-      color:#f3f5fb;
+      background:#0a0b0f;
+      color:white;
       display:flex;
       justify-content:center;
       align-items:center;
-      min-height:100vh;
-      padding:18px;
+      height:100vh;
     }
     .box{
-      width:100%;
-      max-width:380px;
       background:#12141b;
-      border:1px solid #252938;
-      border-radius:18px;
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
-      padding:24px;
-    }
-    h1{
-      margin:0 0 8px;
-      font-size:28px;
-    }
-    p{
-      margin:0 0 16px;
-      color:#9ba3b7;
-      font-size:14px;
-      line-height:1.5;
+      padding:30px;
+      border-radius:16px;
+      width:320px;
+      text-align:center;
     }
     input{
       width:100%;
-      box-sizing:border-box;
-      border:1px solid #2a3040;
-      background:#0f1219;
-      color:#f3f5fb;
-      border-radius:12px;
-      padding:12px 13px;
-      font-size:15px;
-      outline:none;
-      margin-bottom:10px;
+      margin:10px 0;
+      padding:10px;
+      border-radius:8px;
+      border:none;
     }
     button{
       width:100%;
-      padding:12px 14px;
-      border-radius:12px;
-      font-size:14px;
-      font-weight:700;
+      padding:10px;
+      margin-top:10px;
       border:none;
-      cursor:pointer;
-      margin-top:8px;
-    }
-    .primary{
+      border-radius:8px;
       background:#3ddc84;
-      color:#08100b;
-    }
-    .ghost{
-      background:#1a1f2a;
-      color:#f3f5fb;
-      border:1px solid #2c3345;
+      font-weight:bold;
+      cursor:pointer;
     }
     .msg{
-      margin-top:12px;
-      padding:12px 13px;
-      border-radius:12px;
-      font-size:14px;
+      margin-top:10px;
+      padding:10px;
+      border-radius:8px;
       display:none;
-      line-height:1.5;
     }
-    .err{
-      background:#29161a;
-      color:#ffb1b1;
-      border:1px solid #5e2c35;
-    }
-    .ok{
-      background:#0f1b14;
-      color:#bff7d5;
-      border:1px solid #246943;
-    }
-    .small{
-      font-size:12px;
-      color:#9ba3b7;
-      margin-top:12px;
-      line-height:1.5;
-    }
+    .err{background:#441b1b;}
+    .ok{background:#1b4426;}
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Live Requests</h1>
-    <p>Create an account or log in to manage your own events.</p>
 
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
+<div class="box">
+  <h2>Live Requests</h2>
 
-    <button class="primary" id="loginBtn" type="button">Log In</button>
-    <button class="ghost" id="signupBtn" type="button">Create Account</button>
-    <button class="ghost" id="resetBtn" type="button">Reset Password</button>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-    <div id="msg" class="msg"></div>
+  <button id="loginBtn">Login</button>
+  <button id="signupBtn">Create Account</button>
+  <button id="resetBtn">Reset Password</button>
 
-    <div class="small">
-      Paste your Firebase values into the <code>firebaseConfig</code> block below before uploading.
-    </div>
-  </div>
+  <div id="msg" class="msg"></div>
+</div>
 
 <script>
+// 🔴 PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
@@ -123,93 +77,104 @@ const firebaseConfig = {
   appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc"
 };
 
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 const msg = document.getElementById("msg");
 
-function show(message, ok = false) {
+function show(message, ok=false){
   msg.textContent = message;
   msg.className = "msg " + (ok ? "ok" : "err");
   msg.style.display = "block";
 }
 
-function hideMessage() {
+function clearMsg(){
   msg.style.display = "none";
 }
 
-let auth = null;
+// 🔐 SIGNUP
+document.getElementById("signupBtn").addEventListener("click", async ()=>{
+  clearMsg();
 
-try {
-  firebase.initializeApp(firebaseConfig);
-  auth = firebase.auth();
+  const email = emailInput();
+  const password = passwordInput();
 
-  auth.onAuthStateChanged((user) => {
-    if (user && user.emailVerified) {
-      window.location.href = "dj.html";
-    }
-  });
-} catch (e) {
-  show("Paste your Firebase values into login.html first.");
-}
-
-document.getElementById("signupBtn").addEventListener("click", async () => {
-  hideMessage();
-  if (!auth) return;
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  try {
+  try{
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 
-    await userCredential.user.sendEmailVerification();
-
-    show("Account created. Check your email and click the verification link before logging in.", true);
+    try{
+      await userCredential.user.sendEmailVerification();
+      show("Account created! Check your email to verify.", true);
+    }catch(err){
+      console.error("EMAIL ERROR:", err);
+      show("Account created, but email failed: " + err.message);
+      return;
+    }
 
     await auth.signOut();
-  } catch (e) {
+
+  }catch(e){
     show(e.message);
   }
 });
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  hideMessage();
-  if (!auth) return;
+// 🔐 LOGIN
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+  clearMsg();
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  try{
+    const userCredential = await auth.signInWithEmailAndPassword(
+      emailInput(),
+      passwordInput()
+    );
 
-  try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-
-    if (!userCredential.user.emailVerified) {
+    if(!userCredential.user.emailVerified){
       show("Please verify your email before logging in.");
       await auth.signOut();
       return;
     }
 
     window.location.href = "dj.html";
-  } catch (e) {
+
+  }catch(e){
     show(e.message);
   }
 });
 
-document.getElementById("resetBtn").addEventListener("click", async () => {
-  hideMessage();
-  if (!auth) return;
+// 🔁 RESET PASSWORD
+document.getElementById("resetBtn").addEventListener("click", async ()=>{
+  clearMsg();
 
-  const email = document.getElementById("email").value.trim();
+  const email = emailInput();
 
-  if (!email) {
-    show("Enter your email first, then click Reset Password.");
+  if(!email){
+    show("Enter your email first.");
     return;
   }
 
-  try {
+  try{
     await auth.sendPasswordResetEmail(email);
     show("Password reset email sent.", true);
-  } catch (e) {
+  }catch(e){
     show(e.message);
   }
 });
+
+// helpers
+function emailInput(){
+  return document.getElementById("email").value.trim();
+}
+function passwordInput(){
+  return document.getElementById("password").value;
+}
+
+// auto redirect if already verified
+auth.onAuthStateChanged(user=>{
+  if(user && user.emailVerified){
+    window.location.href = "dj.html";
+  }
+});
 </script>
+
 </body>
 </html>
