@@ -4,72 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Requests - Login</title>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:#0a0b0f;
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
+      margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);
+      color:#f3f5fb;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:18px;
     }
     .box{
-      background:#12141b;
-      padding:30px;
-      border-radius:16px;
-      width:320px;
-      text-align:center;
+      width:100%;max-width:380px;background:#12141b;border:1px solid #252938;border-radius:18px;
+      box-shadow:0 18px 50px rgba(0,0,0,.35);padding:24px;
     }
+    h1{margin:0 0 8px;font-size:28px}
+    p{margin:0 0 16px;color:#9ba3b7;font-size:14px;line-height:1.5}
     input{
-      width:100%;
-      margin:10px 0;
-      padding:10px;
-      border-radius:8px;
-      border:none;
+      width:100%;box-sizing:border-box;border:1px solid #2a3040;background:#0f1219;color:#f3f5fb;
+      border-radius:12px;padding:12px 13px;font-size:15px;outline:none;margin-bottom:10px;
     }
     button{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-      background:#3ddc84;
-      font-weight:bold;
-      cursor:pointer;
+      width:100%;padding:12px 14px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;margin-top:8px;
     }
-    .msg{
-      margin-top:10px;
-      padding:10px;
-      border-radius:8px;
-      display:none;
-    }
-    .err{background:#441b1b;}
-    .ok{background:#1b4426;}
+    .primary{background:#3ddc84;color:#08100b}
+    .ghost{background:#1a1f2a;color:#f3f5fb;border:1px solid #2c3345}
+    .msg{margin-top:12px;padding:12px 13px;border-radius:12px;font-size:14px;display:none}
+    .err{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}
+    .ok{background:#0f1b14;color:#bff7d5;border:1px solid #246943}
+    .small{font-size:12px;color:#9ba3b7;margin-top:12px;line-height:1.5}
+    .brandline{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .dot{width:10px;height:10px;border-radius:999px;background:#3ddc84;box-shadow:0 0 12px rgba(61,220,132,.5)}
   </style>
 </head>
 <body>
-
-<div class="box">
-  <h2>Live Requests</h2>
-
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-
-  <button id="loginBtn">Login</button>
-  <button id="signupBtn">Create Account</button>
-  <button id="resetBtn">Reset Password</button>
-
-  <div id="msg" class="msg"></div>
-</div>
+  <div class="box">
+    <div class="brandline"><span class="dot"></span><h1 style="margin:0">Live Requests</h1></div>
+    <p>Create an account or log in to manage your own events.</p>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button class="primary" id="loginBtn" type="button">Log In</button>
+    <button class="ghost" id="signupBtn" type="button">Create Account</button>
+    <button class="ghost" id="resetBtn" type="button">Reset Password</button>
+    <button class="ghost" id="resendBtn" type="button">Resend Verification Email</button>
+    <div id="msg" class="msg"></div>
+    <div class="small">Use the same Firebase values here as in dj.html and request.html.</div>
+  </div>
 
 <script>
-// 🔴 PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
@@ -77,104 +58,84 @@ const firebaseConfig = {
   appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-const msg = document.getElementById("msg");
-
+const msg = document.getElementById('msg');
 function show(message, ok=false){
   msg.textContent = message;
-  msg.className = "msg " + (ok ? "ok" : "err");
-  msg.style.display = "block";
+  msg.className = 'msg ' + (ok ? 'ok' : 'err');
+  msg.style.display = 'block';
 }
 
-function clearMsg(){
-  msg.style.display = "none";
-}
+try {
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-// 🔐 SIGNUP
-document.getElementById("signupBtn").addEventListener("click", async ()=>{
-  clearMsg();
-
-  const email = emailInput();
-  const password = passwordInput();
-
-  try{
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-
-    try{
-      await userCredential.user.sendEmailVerification();
-      show("Account created! Check your email to verify.", true);
-    }catch(err){
-      console.error("EMAIL ERROR:", err);
-      show("Account created, but email failed: " + err.message);
-      return;
-    }
-
-    await auth.signOut();
-
-  }catch(e){
-    show(e.message);
+  const params = new URLSearchParams(window.location.search);
+  const verifiedMsg = params.get('verified');
+  if (verifiedMsg === 'needed') {
+    show('Please verify your email before logging in to the DJ side.');
   }
-});
 
-// 🔐 LOGIN
-document.getElementById("loginBtn").addEventListener("click", async ()=>{
-  clearMsg();
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return;
+    await user.reload();
+    if (user.emailVerified) {
+      window.location.href = 'dj.html';
+    }
+  });
 
-  try{
-    const userCredential = await auth.signInWithEmailAndPassword(
-      emailInput(),
-      passwordInput()
-    );
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      await cred.user.reload();
+      if (!cred.user.emailVerified) {
+        await auth.signOut();
+        show('Check your email and verify your address before logging in.');
+        return;
+      }
+      window.location.href = 'dj.html';
+    } catch (e) {
+      show(e.message);
+    }
+  });
 
-    if(!userCredential.user.emailVerified){
-      show("Please verify your email before logging in.");
+  document.getElementById('signupBtn').addEventListener('click', async () => {
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      await cred.user.sendEmailVerification();
+      await db.collection('users').doc(cred.user.uid).set({
+        email,
+        createdAt: Date.now(),
+        emailVerified: false,
+        role: 'dj_user'
+      }, { merge: true });
       await auth.signOut();
-      return;
+      show('Account created. Verification email sent. Please verify your email, then log in.', true);
+    } catch (e) {
+      show(e.message);
     }
+  });
 
-    window.location.href = "dj.html";
-
-  }catch(e){
-    show(e.message);
-  }
-});
-
-// 🔁 RESET PASSWORD
-document.getElementById("resetBtn").addEventListener("click", async ()=>{
-  clearMsg();
-
-  const email = emailInput();
-
-  if(!email){
-    show("Enter your email first.");
-    return;
-  }
-
-  try{
-    await auth.sendPasswordResetEmail(email);
-    show("Password reset email sent.", true);
-  }catch(e){
-    show(e.message);
-  }
-});
-
-// helpers
-function emailInput(){
-  return document.getElementById("email").value.trim();
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    try {
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        show('Enter your email first, then click Reset Password.');
+        return;
+      }
+      await auth.sendPasswordResetEmail(email);
+      show('Password reset email sent.', true);
+    } catch (e) {
+      show(e.message);
+    }
+  });
+} catch (e) {
+  show('Paste your Firebase values into login.html first.');
 }
-function passwordInput(){
-  return document.getElementById("password").value;
-}
-
-// auto redirect if already verified
-auth.onAuthStateChanged(user=>{
-  if(user && user.emailVerified){
-    window.location.href = "dj.html";
-  }
-});
 </script>
-
 </body>
 </html>

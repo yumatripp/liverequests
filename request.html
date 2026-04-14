@@ -99,6 +99,7 @@
       <div id="requestClosedBox" class="warning hidden"></div>
       <div id="duplicateBox" class="info hidden"></div>
       <div id="requestResponseBox" class="info hidden"></div>
+      <div id="queueStatusBox" class="success hidden"></div>
       <div id="requestSuccessBox" class="success hidden"></div>
 
       <div class="requester-card">
@@ -170,6 +171,7 @@ let currentEventRequests = [];
 let unsubscribeCurrentRequests = null;
 let unsubscribeSubmittedRequest = null;
 let lastSubmittedRequestId = null;
+let lastKnownRequest = null;
 let selectedTip = 0;
 
 const eventId = new URLSearchParams(window.location.search).get("event");
@@ -181,6 +183,7 @@ const els = {
   requestClosedBox: document.getElementById("requestClosedBox"),
   duplicateBox: document.getElementById("duplicateBox"),
   requestResponseBox: document.getElementById("requestResponseBox"),
+  queueStatusBox: document.getElementById("queueStatusBox"),
   requestSuccessBox: document.getElementById("requestSuccessBox"),
   reqName: document.getElementById("reqName"),
   reqEmail: document.getElementById("reqEmail"),
@@ -278,11 +281,61 @@ function listenToSubmittedRequest() {
     .onSnapshot((doc) => {
       if (!doc.exists) return;
       const data = doc.data() || {};
+      lastKnownRequest = { id: doc.id, ...data };
       if (data.response && String(data.response).trim()) {
         els.requestResponseBox.textContent = "DJ Response: " + data.response;
         els.requestResponseBox.classList.remove("hidden");
       }
+      updateQueueStatus();
     });
+}
+
+function updateQueueStatus() {
+  if (!lastSubmittedRequestId) {
+    els.queueStatusBox.classList.add("hidden");
+    return;
+  }
+
+  const request = currentEventRequests.find(req => req.id === lastSubmittedRequestId) || lastKnownRequest;
+  if (!request) {
+    els.queueStatusBox.classList.add("hidden");
+    return;
+  }
+
+  if ((request.status || "new") === "history") {
+    els.queueStatusBox.textContent = "Your request has already been played.";
+    els.queueStatusBox.classList.remove("hidden");
+    return;
+  }
+
+  if ((request.status || "new") === "now_playing") {
+    els.queueStatusBox.textContent = `Now Playing: ${request.artist} — ${request.track}`;
+    els.queueStatusBox.classList.remove("hidden");
+    return;
+  }
+
+  const activeQueue = currentEventRequests
+    .filter(r => (r.status || "new") !== "history")
+    .sort((a,b) => {
+      const aStatus = a.status || "new";
+      const bStatus = b.status || "new";
+      const aPlaying = aStatus === "now_playing" ? 0 : 1;
+      const bPlaying = bStatus === "now_playing" ? 0 : 1;
+      if (aPlaying !== bPlaying) return aPlaying - bPlaying;
+      const aTip = Number(a.tip || 0) > 0 ? 0 : 1;
+      const bTip = Number(b.tip || 0) > 0 ? 0 : 1;
+      if (aTip !== bTip) return aTip - bTip;
+      if ((a.sortOrder ?? 999999) != (b.sortOrder ?? 999999)) return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
+      return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+    });
+
+  const position = activeQueue.findIndex(r => r.id === request.id);
+  if (position >= 0) {
+    els.queueStatusBox.textContent = `Your current queue position: #${position + 1}`;
+    els.queueStatusBox.classList.remove("hidden");
+  } else {
+    els.queueStatusBox.classList.add("hidden");
+  }
 }
 
 function updateDuplicateMessage() {
@@ -381,6 +434,7 @@ function listenCurrentEventRequests() {
     .onSnapshot(snapshot => {
       currentEventRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       updateDuplicateMessage();
+      updateQueueStatus();
     });
 }
 
@@ -534,6 +588,8 @@ async function submitRequest() {
     listenToSubmittedRequest();
     els.requestSuccessBox.classList.remove("hidden");
     els.requestSuccessBox.textContent = `Submitted: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`;
+    els.queueStatusBox.textContent = "Your request has been added to the queue.";
+    els.queueStatusBox.classList.remove("hidden");
     els.reqArtist.value = "";
     els.reqTrack.value = "";
     els.suggestionsBox.innerHTML = "";

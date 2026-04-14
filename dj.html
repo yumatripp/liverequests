@@ -173,6 +173,7 @@
     <div class="brand">
       <h1>Live Requests</h1>
       <p>DJ side with event setup, request limits, cutoff settings, and returning-requester notifications.</p>
+      <div id="accountEmail" style="margin-top:8px;color:#9ba3b7;font-size:12px"></div>
     </div>
     <div class="view-toggle">
       <button id="showFullBtn" class="active" type="button">Full DJ View</button>
@@ -400,6 +401,7 @@ const els = {
   showQueueBtn: document.getElementById("showQueueBtn"),
   loadLiveBtn: document.getElementById("loadLiveBtn"),
   logoutBtn: document.getElementById("logoutBtn"),
+  accountEmail: document.getElementById("accountEmail"),
   newEventBtn: document.getElementById("newEventBtn"),
   djSetupSection: document.getElementById("djSetupSection"),
   eventName: document.getElementById("eventName"),
@@ -874,6 +876,7 @@ function initFirebase() {
         return;
       }
       currentUser = user;
+      els.accountEmail.textContent = `Signed in as ${user.email || ""}`;
       try {
         await db.collection('users').doc(user.uid).set({
           email: user.email || '',
