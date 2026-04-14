@@ -140,6 +140,17 @@
     }
     .settings-box h3{margin:0 0 10px}
     .request-flags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    .filters-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .filter-btn{
+      appearance:none;border:1px solid #2c3345;background:#161b25;color:var(--text);
+      border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:700;
+    }
+    .filter-btn.active{background:#24354d;border-color:#3d5c86}
+    .now-playing-card,.history-card{
+      background:#101723;border:1px solid #28405f;border-radius:16px;padding:14px;
+    }
+    .now-playing-card h3,.history-card h3{margin:0 0 10px;font-size:16px}
     @media (max-width:1024px){
       .grid-3{grid-template-columns:1fr}
     }
@@ -237,7 +248,24 @@
               </div>
             </div>
           </div>
-          <div class="helper" style="margin-top:10px;">Any request with a tip amount greater than $0 bypasses both the request limit and the cutoff.</div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div>
+              <label for="venmoLink">Venmo link (optional)</label>
+              <input id="venmoLink" placeholder="https://venmo.com/yourname" />
+            </div>
+            <div>
+              <label for="paypalLink">PayPal link (optional)</label>
+              <input id="paypalLink" placeholder="https://paypal.me/yourname" />
+            </div>
+            <div>
+              <label for="notificationSoundEnabled">Incoming sound alert</label>
+              <div class="checkbox-row">
+                <input id="notificationSoundEnabled" type="checkbox" checked />
+                <span>Play a short sound on new requests</span>
+              </div>
+            </div>
+          </div>
+          <div class="helper" style="margin-top:10px;">Any request with a tip amount greater than $0 bypasses both the request limit and the cutoff. Venmo and PayPal links are optional and appear on the requester side if filled in.</div>
         </div>
 
         <div class="row" style="margin-top:12px;">
@@ -291,7 +319,16 @@
 
         <div id="notificationBox" class="success hidden"></div>
         <div id="statusBox" class="warning hidden"></div>
+        <div class="filters-bar">
+          <button class="filter-btn active" id="filterAllBtn" type="button">All</button>
+          <button class="filter-btn" id="filterNewBtn" type="button">New</button>
+          <button class="filter-btn" id="filterTippedBtn" type="button">Tipped</button>
+          <button class="filter-btn" id="filterDuplicateBtn" type="button">Duplicates</button>
+          <button class="filter-btn" id="filterReturningBtn" type="button">Returning</button>
+        </div>
+        <div id="nowPlayingBox" class="now-playing-card hidden"></div>
         <div id="queueList" class="request-list"></div>
+        <div id="historyBox" class="history-card hidden"></div>
       </div>
     </div>
   </section>
@@ -309,6 +346,9 @@ let db = null;
 let unsubscribeRequests = null;
 let activeEventId = null;
 let currentEventData = null;
+let currentRequests = [];
+let currentFilter = "all";
+let audioCtx = null;
 
 const els = {
   showFullBtn: document.getElementById("showFullBtn"),
@@ -324,6 +364,9 @@ const els = {
   requestLimitMinutes: document.getElementById("requestLimitMinutes"),
   cutoffMinutes: document.getElementById("cutoffMinutes"),
   flagReturningRequesters: document.getElementById("flagReturningRequesters"),
+  venmoLink: document.getElementById("venmoLink"),
+  paypalLink: document.getElementById("paypalLink"),
+  notificationSoundEnabled: document.getElementById("notificationSoundEnabled"),
   saveEventBtn: document.getElementById("saveEventBtn"),
   setLiveNowBtn: document.getElementById("setLiveNowBtn"),
   activeEventBanner: document.getElementById("activeEventBanner"),
@@ -333,6 +376,13 @@ const els = {
   notificationBox: document.getElementById("notificationBox"),
   notificationBadge: document.getElementById("notificationBadge"),
   statusBox: document.getElementById("statusBox"),
+  filterAllBtn: document.getElementById("filterAllBtn"),
+  filterNewBtn: document.getElementById("filterNewBtn"),
+  filterTippedBtn: document.getElementById("filterTippedBtn"),
+  filterDuplicateBtn: document.getElementById("filterDuplicateBtn"),
+  filterReturningBtn: document.getElementById("filterReturningBtn"),
+  nowPlayingBox: document.getElementById("nowPlayingBox"),
+  historyBox: document.getElementById("historyBox"),
   qrImage: document.getElementById("qrImage"),
   qrCaption: document.getElementById("qrCaption"),
   flyerQrImage: document.getElementById("flyerQrImage"),
@@ -392,6 +442,9 @@ function eventFromInputs(forceLive=false) {
     requestLimitMinutes: Number(els.requestLimitMinutes.value || 0),
     cutoffMinutes: Number(els.cutoffMinutes.value || 0),
     flagReturningRequesters: !!els.flagReturningRequesters.checked,
+    venmoLink: els.venmoLink.value.trim(),
+    paypalLink: els.paypalLink.value.trim(),
+    notificationSoundEnabled: !!els.notificationSoundEnabled.checked,
     updatedAt: Date.now()
   };
 }
@@ -451,6 +504,9 @@ function renderEvent(eventId, eventData) {
   els.requestLimitMinutes.value = String(eventData.requestLimitMinutes || 0);
   els.cutoffMinutes.value = String(eventData.cutoffMinutes || 0);
   els.flagReturningRequesters.checked = eventData.flagReturningRequesters !== false;
+  els.venmoLink.value = eventData.venmoLink || "";
+  els.paypalLink.value = eventData.paypalLink || "";
+  els.notificationSoundEnabled.checked = eventData.notificationSoundEnabled !== false;
 
   const status = eventStatus(eventData);
   const badgeClass = status === "live" ? "badge live" : (status === "ended" ? "badge closed" : "badge");
@@ -458,7 +514,8 @@ function renderEvent(eventId, eventData) {
   const settingsText = [
     eventData.requestLimitMinutes ? `Limit: every ${eventData.requestLimitMinutes} min` : "Limit: none",
     eventData.cutoffMinutes ? `Cutoff: ${eventData.cutoffMinutes} min before end` : "Cutoff: none",
-    eventData.flagReturningRequesters !== false ? "Returning alerts: on" : "Returning alerts: off"
+    eventData.flagReturningRequesters !== false ? "Returning alerts: on" : "Returning alerts: off",
+    eventData.notificationSoundEnabled !== false ? "Sound: on" : "Sound: off"
   ].join(" · ");
 
   els.activeEventBanner.innerHTML = `
@@ -487,15 +544,105 @@ function renderEvent(eventId, eventData) {
   }
 }
 
-function renderQueue(requests) {
-  els.requestCountBadge.textContent = `${requests.length} Request${requests.length === 1 ? "" : "s"}`;
 
-  if (!requests.length) {
-    els.queueList.innerHTML = `<div class="empty">No requests yet. Open request.html from the QR link on another device and send one.</div>`;
+function playNotificationSound() {
+  try {
+    if (!currentEventData || currentEventData.notificationSoundEnabled === false) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function applyQueueFilter(requests) {
+  const active = requests.filter(req => (req.status || "new") !== "history");
+  if (currentFilter === "new") return active.filter(req => !req.tip && !req.isDuplicate && !req.returningRequester);
+  if (currentFilter === "tipped") return active.filter(req => Number(req.tip || 0) > 0);
+  if (currentFilter === "duplicate") return active.filter(req => req.isDuplicate);
+  if (currentFilter === "returning") return active.filter(req => req.returningRequester);
+  return active;
+}
+
+function syncFilterButtons() {
+  const map = {
+    all: els.filterAllBtn,
+    new: els.filterNewBtn,
+    tipped: els.filterTippedBtn,
+    duplicate: els.filterDuplicateBtn,
+    returning: els.filterReturningBtn
+  };
+  Object.entries(map).forEach(([key, btn]) => btn.classList.toggle("active", currentFilter === key));
+}
+
+function renderNowPlaying(requests) {
+  const nowPlaying = requests.find(req => req.status === "now_playing");
+  if (!nowPlaying) {
+    els.nowPlayingBox.classList.add("hidden");
+    return;
+  }
+  els.nowPlayingBox.classList.remove("hidden");
+  els.nowPlayingBox.innerHTML = `
+    <h3>Now Playing</h3>
+    <div><strong>${escapeHtml(nowPlaying.artist)}</strong> — ${escapeHtml(nowPlaying.track)}</div>
+    <div class="helper" style="margin-top:6px;">Requested by ${escapeHtml(nowPlaying.name)} · ${escapeHtml(nowPlaying.email)}</div>
+    <div class="request-flags" style="margin-top:10px;">
+      ${nowPlaying.tip > 0 ? `<span class="badge tip">Tipped $${nowPlaying.tip}</span>` : ``}
+      ${nowPlaying.returningRequester ? `<span class="badge repeat">Past requester</span>` : ``}
+    </div>
+    <div class="request-actions" style="margin-top:12px;">
+      <button class="tiny-btn" onclick="moveToHistory('${nowPlaying.id}')" type="button">Move to History</button>
+      <button class="tiny-btn" onclick="clearNowPlaying('${nowPlaying.id}')" type="button">Return to Queue</button>
+    </div>
+  `;
+}
+
+function renderHistory(requests) {
+  const history = requests.filter(req => req.status === "history");
+  if (!history.length) {
+    els.historyBox.classList.add("hidden");
+    return;
+  }
+  els.historyBox.classList.remove("hidden");
+  els.historyBox.innerHTML = `
+    <h3>History</h3>
+    ${history.slice().reverse().map(req => `
+      <div style="padding:10px 0;border-top:1px solid #243248;">
+        <strong>${escapeHtml(req.artist)}</strong> — ${escapeHtml(req.track)}
+        <div class="helper">${escapeHtml(req.name)} · ${escapeHtml(req.email)}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+
+function renderQueue(requests) {
+  syncFilterButtons();
+  renderNowPlaying(requests);
+  renderHistory(requests);
+
+  const visible = applyQueueFilter(requests);
+  const activeCount = requests.filter(req => (req.status || "new") !== "history").length;
+  els.requestCountBadge.textContent = `${activeCount} Request${activeCount === 1 ? "" : "s"}`;
+
+  if (!visible.length) {
+    els.queueList.innerHTML = `<div class="empty">No requests match this filter right now.</div>`;
     return;
   }
 
-  els.queueList.innerHTML = requests.map((req, idx) => `
+  els.queueList.innerHTML = visible.map((req, idx) => `
     <div class="request-card">
       <div class="request-head">
         <div class="request-title">
@@ -503,7 +650,7 @@ function renderQueue(requests) {
           <strong style="font-size:15px; font-weight:600; color:#d5d9e6;">${escapeHtml(req.track)}</strong>
           <div class="request-sub">
             Requested by ${escapeHtml(req.name)} · ${escapeHtml(req.email)}<br>
-            Position ${idx + 1}
+            ${req.status === "now_playing" ? "Now playing" : `Position ${idx + 1}`}
           </div>
           <div class="request-flags">
             ${req.tip > 0 ? `<span class="badge tip">Tipped $${req.tip}</span>` : ``}
@@ -518,6 +665,7 @@ function renderQueue(requests) {
       <div class="request-actions">
         <button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Move Up</button>
         <button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Move Down</button>
+        <button class="tiny-btn" onclick="markNowPlaying('${req.id}')" type="button">Now Playing</button>
         <button class="tiny-btn" onclick="respondToRequest('${req.id}')" type="button">Respond</button>
         <button class="danger-btn" style="padding:7px 10px; font-size:12px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button>
       </div>
@@ -615,6 +763,14 @@ function listenRequests() {
     .onSnapshot(snapshot => {
       const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       requests.sort((a,b) => {
+        const aStatus = a.status || "new";
+        const bStatus = b.status || "new";
+        const aPlaying = aStatus === "now_playing" ? 0 : aStatus === "history" ? 2 : 1;
+        const bPlaying = bStatus === "now_playing" ? 0 : bStatus === "history" ? 2 : 1;
+        if (aPlaying !== bPlaying) return aPlaying - bPlaying;
+        const aTip = Number(a.tip || 0) > 0 ? 0 : 1;
+        const bTip = Number(b.tip || 0) > 0 ? 0 : 1;
+        if (aTip !== bTip) return aTip - bTip;
         if ((a.sortOrder ?? 999999) !== (b.sortOrder ?? 999999)) {
           return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
         }
@@ -635,10 +791,12 @@ function listenRequests() {
           message += ` · tipped $${latest.tip}`;
         }
         showNotification(message);
+        playNotificationSound();
       } else {
         hideNotification();
       }
 
+      currentRequests = requests;
       renderQueue(requests);
     }, err => {
       console.error(err);
@@ -751,6 +909,31 @@ img{width:min(420px,86vw);height:auto}
   win.document.close();
 }
 
+
+async function markNowPlaying(id) {
+  if (!db || !activeEventId) return;
+  const snapshot = await db.collection("requests").where("eventId", "==", activeEventId).get();
+  const batch = db.batch();
+  snapshot.docs.forEach(doc => {
+    if (doc.data().status === "now_playing" && doc.id !== id) {
+      batch.set(doc.ref, { status: "new" }, { merge: true });
+    }
+  });
+  batch.set(db.collection("requests").doc(id), { status: "now_playing" }, { merge: true });
+  await batch.commit();
+}
+
+async function moveToHistory(id) {
+  if (!db) return;
+  await db.collection("requests").doc(id).set({ status: "history" }, { merge: true });
+}
+
+async function clearNowPlaying(id) {
+  if (!db) return;
+  await db.collection("requests").doc(id).set({ status: "new" }, { merge: true });
+}
+
+
 function setView(mode) {
   els.showFullBtn.classList.toggle("active", mode === "full");
   els.showQueueBtn.classList.toggle("active", mode === "queue");
@@ -760,6 +943,9 @@ function setView(mode) {
 window.moveRequest = moveRequest;
 window.deleteRequest = deleteRequest;
 window.respondToRequest = respondToRequest;
+window.markNowPlaying = markNowPlaying;
+window.moveToHistory = moveToHistory;
+window.clearNowPlaying = clearNowPlaying;
 
 els.saveEventBtn.addEventListener("click", () => saveEvent(false));
 els.setLiveNowBtn.addEventListener("click", () => saveEvent(true));
@@ -769,6 +955,11 @@ els.copyLinkBtn.addEventListener("click", copyLink);
 els.downloadQrBtn.addEventListener("click", openQrImage);
 els.openFlyerBtn.addEventListener("click", openFlyerView);
 els.loadLiveBtn.addEventListener("click", loadActiveEvent);
+els.filterAllBtn.addEventListener("click", () => { currentFilter = "all"; renderQueue(currentRequests); });
+els.filterNewBtn.addEventListener("click", () => { currentFilter = "new"; renderQueue(currentRequests); });
+els.filterTippedBtn.addEventListener("click", () => { currentFilter = "tipped"; renderQueue(currentRequests); });
+els.filterDuplicateBtn.addEventListener("click", () => { currentFilter = "duplicate"; renderQueue(currentRequests); });
+els.filterReturningBtn.addEventListener("click", () => { currentFilter = "returning"; renderQueue(currentRequests); });
 
 setView("full");
 if (initFirebase()) {

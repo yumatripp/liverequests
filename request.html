@@ -129,6 +129,15 @@
         <div class="helper" style="margin-top:10px;">Tipped requests bypass the time limit and cutoff settings.</div>
       </div>
 
+      <div class="requester-card hidden" id="tipLinksCard">
+        <h3>Tip DJ directly</h3>
+        <div class="helper" style="margin-bottom:10px;">Optional direct links. These do not confirm payment automatically.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a id="venmoButton" class="primary-btn hidden" href="#" target="_blank" rel="noopener" style="text-decoration:none;text-align:center;flex:1;">Tip with Venmo</a>
+          <a id="paypalButton" class="primary-btn hidden" href="#" target="_blank" rel="noopener" style="text-decoration:none;text-align:center;flex:1;">Tip with PayPal</a>
+        </div>
+      </div>
+
       <button class="primary-btn" id="submitRequestBtn" type="button">Submit Request</button>
     </div>
   </div>
@@ -174,6 +183,9 @@ const els = {
   reqTrack: document.getElementById("reqTrack"),
   suggestionsBox: document.getElementById("suggestionsBox"),
   submitRequestBtn: document.getElementById("submitRequestBtn"),
+  tipLinksCard: document.getElementById("tipLinksCard"),
+  venmoButton: document.getElementById("venmoButton"),
+  paypalButton: document.getElementById("paypalButton"),
   tipButtons: Array.from(document.querySelectorAll(".tip-btn"))
 };
 
@@ -251,8 +263,8 @@ function updateDuplicateMessage() {
   const first = matches[0];
   const times = matches.length;
   els.duplicateBox.textContent = times === 1
-    ? `This song was already requested for this event by ${first.name || "another guest"}. You can still submit it.`
-    : `This song has already been requested ${times} times for this event. You can still submit it.`;
+    ? `This song was already requested for this event by ${first.name || "another guest"}. You can still request it too.`
+    : `This song has already been requested ${times} times for this event. You can still request it too.`;
   els.duplicateBox.classList.remove("hidden");
   return matches;
 }
@@ -262,6 +274,15 @@ function renderEvent(eventData) {
   els.reqEventTitle.textContent = eventData.name || "Untitled Event";
   els.liveRequestsSubtitle.textContent = "Request Your Songs for " + (eventData.name || "this event");
   els.reqEventMeta.textContent = `${eventData.venue || "Venue not set"} · ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add event date/time"}`;
+
+  const venmo = (eventData.venmoLink || "").trim();
+  const paypal = (eventData.paypalLink || "").trim();
+  const hasTips = !!(venmo || paypal);
+  els.tipLinksCard.classList.toggle("hidden", !hasTips);
+  els.venmoButton.classList.toggle("hidden", !venmo);
+  els.paypalButton.classList.toggle("hidden", !paypal);
+  if (venmo) els.venmoButton.href = venmo;
+  if (paypal) els.paypalButton.href = paypal;
 
   const status = eventStatus(eventData);
   if (status === "upcoming") {
