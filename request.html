@@ -104,8 +104,9 @@
         <h3>Your info</h3>
         <label for="reqName">Name</label>
         <input id="reqName" placeholder="Your name" />
-        <label for="reqEmail" style="margin-top:10px;">Email</label>
+        <label for="reqEmail" id="reqEmailLabel" style="margin-top:10px;">Email</label>
         <input id="reqEmail" type="email" placeholder="you@email.com" />
+        <div class="helper" id="reqEmailHelper">Required for this event.</div>
       </div>
 
       <div class="requester-card">
@@ -179,6 +180,8 @@ const els = {
   requestSuccessBox: document.getElementById("requestSuccessBox"),
   reqName: document.getElementById("reqName"),
   reqEmail: document.getElementById("reqEmail"),
+  reqEmailLabel: document.getElementById("reqEmailLabel"),
+  reqEmailHelper: document.getElementById("reqEmailHelper"),
   reqArtist: document.getElementById("reqArtist"),
   reqTrack: document.getElementById("reqTrack"),
   suggestionsBox: document.getElementById("suggestionsBox"),
@@ -205,8 +208,10 @@ function normalizeText(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-function requesterKey(email) {
-  return String(email || "").trim().toLowerCase();
+function requesterKey(email, name="") {
+  const emailKey = String(email || "").trim().toLowerCase();
+  if (emailKey) return emailKey;
+  return `name:${normalizeText(name)}`;
 }
 
 function formatDateTime(dateObj) {
@@ -283,6 +288,11 @@ function renderEvent(eventData) {
   els.paypalButton.classList.toggle("hidden", !paypal);
   if (venmo) els.venmoButton.href = venmo;
   if (paypal) els.paypalButton.href = paypal;
+
+  const emailRequired = eventData.emailRequired !== false;
+  els.reqEmailLabel.textContent = emailRequired ? "Email" : "Email (optional)";
+  els.reqEmail.placeholder = emailRequired ? "you@email.com" : "Optional";
+  els.reqEmailHelper.textContent = emailRequired ? "Required for this event." : "Optional for this event.";
 
   const status = eventStatus(eventData);
   if (status === "upcoming") {
@@ -389,7 +399,7 @@ function applySuggestion(artist, track) {
   updateDuplicateMessage();
 }
 
-function validateRequestAgainstRules(email, tipped) {
+function validateRequestAgainstRules(email, name, tipped) {
   if (!currentEvent) {
     return "No event is loaded yet.";
   }
@@ -408,11 +418,11 @@ function validateRequestAgainstRules(email, tipped) {
     }
 
     const limitMinutes = Number(currentEvent.requestLimitMinutes || 0);
-    const key = requesterKey(email);
+    const key = requesterKey(email, name);
     if (limitMinutes > 0 && key) {
       const windowStart = Date.now() - limitMinutes * 60 * 1000;
       const recent = currentEventRequests.find(req =>
-        requesterKey(req.requesterKey || req.email) === key &&
+        requesterKey(req.requesterKey || req.email, req.name) === key &&
         Number(req.createdAt || 0) >= windowStart
       );
       if (recent) {
@@ -433,20 +443,22 @@ async function submitRequest() {
   const track = els.reqTrack.value.trim();
   const tipped = selectedTip > 0;
 
-  if (!name || !email || !artist || !track) {
-    alert("Please fill in name, email, artist, and track title.");
+  const emailRequired = currentEvent.emailRequired !== false;
+  if (!name || !artist || !track || (emailRequired && !email)) {
+    alert(emailRequired ? "Please fill in name, email, artist, and track title." : "Please fill in name, artist, and track title.");
     return;
   }
 
-  const ruleError = validateRequestAgainstRules(email, tipped);
+  const ruleError = validateRequestAgainstRules(email, name, tipped);
   if (ruleError) {
     alert(ruleError);
     return;
   }
 
   try {
+    const requestKey = requesterKey(email, name);
     const allByRequester = await db.collection("requests")
-      .where("requesterKey", "==", requesterKey(email))
+      .where("requesterKey", "==", requestKey)
       .get();
 
     const pastRequests = allByRequester.docs
@@ -462,7 +474,7 @@ async function submitRequest() {
       eventId,
       name,
       email,
-      requesterKey: requesterKey(email),
+      requesterKey: requestKey,
       artist,
       track,
       tip: selectedTip,
