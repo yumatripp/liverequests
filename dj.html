@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DJ Request - DJ Side</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <style>
     :root{
       --bg:#0a0b0f;
@@ -101,9 +105,11 @@
       background:#172116;color:#aaf4c8;border:1px solid #2f6140;
     }
     .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .success{
-      color:#bff7d5;background:#0f1b14;border:1px solid #246943;border-radius:12px;padding:12px 13px;font-size:14px;
+    .success,.warning{
+      border-radius:12px;padding:12px 13px;font-size:14px
     }
+    .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
+    .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
     .hidden{display:none!important}
     .empty{
       border:1px dashed #31384a;padding:24px;border-radius:16px;color:var(--muted);
@@ -126,6 +132,10 @@
     .flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}
     .flyer-preview img{width:220px;height:220px;object-fit:contain}
     .flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .config-box{
+      background:#101723;border:1px solid #283246;border-radius:18px;padding:15px;margin-bottom:16px;
+    }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     @media (max-width:900px){
       .qr-wrap,.grid-2{grid-template-columns:1fr}
     }
@@ -152,12 +162,18 @@
         <p>Create the event, generate the QR-style link, and manage the queue.</p>
       </div>
       <div class="row">
-        <button class="ghost-btn" id="demoDataBtn" type="button">Load Demo Event</button>
+        <button class="ghost-btn" id="loadLiveBtn" type="button">Load Active Event</button>
       </div>
     </div>
 
     <div class="panel-body split-stack">
       <div id="djSetupSection">
+        <div class="config-box">
+          <h3 style="margin:0 0 8px;">Firebase config</h3>
+          <div class="helper">Paste the same four values from Firebase into both files. This page will not work live until you do.</div>
+          <div class="helper" style="margin-top:8px;"><span class="mono">apiKey</span>, <span class="mono">authDomain</span>, <span class="mono">projectId</span>, <span class="mono">appId</span></div>
+        </div>
+
         <div class="event-banner" id="activeEventBanner">
           <div>
             <h3>No active event yet</h3>
@@ -243,6 +259,7 @@
         </div>
 
         <div id="notificationBox" class="success hidden"></div>
+        <div id="statusBox" class="warning hidden"></div>
         <div id="queueList" class="request-list"></div>
       </div>
     </div>
@@ -250,17 +267,24 @@
 </div>
 
 <script>
-const STORAGE_KEY = "dj_request_split_state_v1";
+// PASTE YOUR FIREBASE VALUES HERE IN THIS FILE
+const firebaseConfig = {
+  apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
+  authDomain: "live-requests-73c57.firebaseapp.com",
+  projectId: "live-requests-73c57",
+  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc"
+};
 
-let state = loadState();
+let db = null;
+let unsubscribeRequests = null;
+let activeEventId = null;
 
 const els = {
   showFullBtn: document.getElementById("showFullBtn"),
   showQueueBtn: document.getElementById("showQueueBtn"),
   resetDemoBtn: document.getElementById("resetDemoBtn"),
-  demoDataBtn: document.getElementById("demoDataBtn"),
+  loadLiveBtn: document.getElementById("loadLiveBtn"),
   djSetupSection: document.getElementById("djSetupSection"),
-  djQueueSection: document.getElementById("djQueueSection"),
   eventName: document.getElementById("eventName"),
   eventVenue: document.getElementById("eventVenue"),
   eventDate: document.getElementById("eventDate"),
@@ -275,6 +299,7 @@ const els = {
   requestCountBadge: document.getElementById("requestCountBadge"),
   notificationBox: document.getElementById("notificationBox"),
   notificationBadge: document.getElementById("notificationBadge"),
+  statusBox: document.getElementById("statusBox"),
   qrImage: document.getElementById("qrImage"),
   qrCaption: document.getElementById("qrCaption"),
   flyerQrImage: document.getElementById("flyerQrImage"),
@@ -285,35 +310,12 @@ const els = {
   copyLinkBtn: document.getElementById("copyLinkBtn")
 };
 
-function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try { return JSON.parse(saved); } catch (e) {}
-  }
-  return { event: null, requests: [], lastNotificationText: "" };
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function uid(prefix="id") {
-  return prefix + "_" + Math.random().toString(36).slice(2,10);
-}
-
 function escapeHtml(text) {
   return String(text ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;");
-}
-
-function buildEventDateTimes(event) {
-  if (!event || !event.date || !event.startTime || !event.endTime) return null;
-  const start = new Date(`${event.date}T${event.startTime}`);
-  const end = new Date(`${event.date}T${event.endTime}`);
-  return { start, end };
 }
 
 function formatDateTime(dateObj) {
@@ -323,20 +325,53 @@ function formatDateTime(dateObj) {
   });
 }
 
-function getEventStatus(event) {
-  if (!event) return "none";
-  const dt = buildEventDateTimes(event);
-  if (!dt) return "draft";
-  const now = new Date();
-  if (now < dt.start) return "upcoming";
-  if (now > dt.end) return "ended";
+function eventFromInputs(forceLive=false) {
+  let date = els.eventDate.value;
+  let startTime = els.eventStart.value;
+  let endTime = els.eventEnd.value;
+
+  if (forceLive) {
+    const now = new Date();
+    const start = new Date(now.getTime() - 60*60*1000);
+    const end = new Date(now.getTime() + 2*60*60*1000);
+    date = now.toISOString().slice(0,10);
+    startTime = start.toTimeString().slice(0,5);
+    endTime = end.toTimeString().slice(0,5);
+  }
+
+  if (!els.eventName.value.trim() || !els.eventVenue.value.trim() || !date || !startTime || !endTime) {
+    return null;
+  }
+
+  const startAt = new Date(`${date}T${startTime}`).getTime();
+  const endAt = new Date(`${date}T${endTime}`).getTime();
+
+  return {
+    name: els.eventName.value.trim(),
+    venue: els.eventVenue.value.trim(),
+    djName: els.djName.value.trim(),
+    date,
+    startTime,
+    endTime,
+    startAt,
+    endAt,
+    active: true,
+    updatedAt: Date.now()
+  };
+}
+
+function eventStatus(eventData) {
+  if (!eventData || !eventData.startAt || !eventData.endAt) return "draft";
+  const now = Date.now();
+  if (now < eventData.startAt) return "upcoming";
+  if (now > eventData.endAt) return "ended";
   return "live";
 }
 
 function getRequesterLink() {
-  if (!state.event) return "";
+  if (!activeEventId) return "";
   const requestUrl = new URL("request.html", window.location.href);
-  requestUrl.searchParams.set("event", state.event.id);
+  requestUrl.searchParams.set("event", activeEventId);
   return requestUrl.toString();
 }
 
@@ -346,75 +381,71 @@ function getQrUrl() {
   return `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=20&data=${encodeURIComponent(link)}`;
 }
 
-function renderEventForm() {
-  const e = state.event;
-  els.eventName.value = e?.name || "";
-  els.eventVenue.value = e?.venue || "";
-  els.eventDate.value = e?.date || "";
-  els.eventStart.value = e?.startTime || "";
-  els.eventEnd.value = e?.endTime || "";
-  els.djName.value = e?.djName || "";
+function showStatus(message, type="warning") {
+  els.statusBox.textContent = message;
+  els.statusBox.className = type === "success" ? "success" : "warning";
+  els.statusBox.classList.remove("hidden");
 }
 
-function renderEventBanner() {
-  const e = state.event;
-  if (!e) {
-    els.activeEventBanner.innerHTML = `
-      <div>
-        <h3>No active event yet</h3>
-        <div class="meta">Create an event below, then use the public request link on your phone.</div>
-      </div>
-      <span class="badge closed">No Event</span>
-    `;
-    els.eventLink.value = "Create an event first";
-    return;
-  }
+function hideStatus() {
+  els.statusBox.classList.add("hidden");
+}
 
-  const dt = buildEventDateTimes(e);
-  const status = getEventStatus(e);
+function showNotification(message) {
+  els.notificationBox.textContent = message;
+  els.notificationBox.classList.remove("hidden");
+  els.notificationBadge.textContent = "New Request";
+}
+
+function hideNotification() {
+  els.notificationBox.classList.add("hidden");
+  els.notificationBadge.textContent = "No New Requests";
+}
+
+function renderEvent(eventId, eventData) {
+  activeEventId = eventId;
+
+  els.eventName.value = eventData.name || "";
+  els.eventVenue.value = eventData.venue || "";
+  els.djName.value = eventData.djName || "";
+  els.eventDate.value = eventData.date || "";
+  els.eventStart.value = eventData.startTime || "";
+  els.eventEnd.value = eventData.endTime || "";
+
+  const status = eventStatus(eventData);
   const badgeClass = status === "live" ? "badge live" : (status === "ended" ? "badge closed" : "badge");
   const badgeText = status === "live" ? "Live Now" : status === "ended" ? "Ended" : "Upcoming";
 
   els.activeEventBanner.innerHTML = `
     <div>
-      <h3>${escapeHtml(e.name || "Untitled Event")}</h3>
+      <h3>${escapeHtml(eventData.name || "Untitled Event")}</h3>
       <div class="meta">
-        ${escapeHtml(e.venue || "No venue")}<br>
-        DJ: ${escapeHtml(e.djName || "Not set")}<br>
-        ${dt ? `${formatDateTime(dt.start)} – ${formatDateTime(dt.end)}` : "Add date/time"}
+        ${escapeHtml(eventData.venue || "No venue")}<br>
+        DJ: ${escapeHtml(eventData.djName || "Not set")}<br>
+        ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add date/time"}
       </div>
     </div>
     <span class="${badgeClass}">${badgeText}</span>
   `;
-  els.eventLink.value = getRequesterLink();
-}
 
-function renderQr() {
-  const e = state.event;
-  if (!e) {
-    els.qrImage.removeAttribute("src");
-    els.flyerQrImage.removeAttribute("src");
-    els.qrCaption.textContent = "Create an event to generate the QR code.";
-    els.flyerTitle.textContent = "Scan to Request a Song";
-    els.flyerMeta.textContent = "Create an event to generate the flyer-ready QR.";
-    return;
-  }
+  const link = getRequesterLink();
+  els.eventLink.value = link || "Create an event first";
+
   const qrUrl = getQrUrl();
-  const dt = buildEventDateTimes(e);
-  const when = dt ? formatDateTime(dt.start) : "";
-  els.qrImage.src = qrUrl;
-  els.flyerQrImage.src = qrUrl;
-  els.qrCaption.textContent = e.name;
-  els.flyerTitle.textContent = e.name;
-  els.flyerMeta.textContent = `${e.venue} • ${when}`;
+  if (qrUrl) {
+    els.qrImage.src = qrUrl;
+    els.flyerQrImage.src = qrUrl;
+    els.qrCaption.textContent = eventData.name || "QR ready";
+    els.flyerTitle.textContent = eventData.name || "Scan to Request a Song";
+    els.flyerMeta.textContent = `${eventData.venue || ""} • ${eventData.startAt ? formatDateTime(new Date(eventData.startAt)) : ""}`;
+  }
 }
 
-function renderQueue() {
-  const requests = [...(state.requests || [])];
+function renderQueue(requests) {
   els.requestCountBadge.textContent = `${requests.length} Request${requests.length === 1 ? "" : "s"}`;
 
   if (!requests.length) {
-    els.queueList.innerHTML = `<div class="empty">No requests yet. Use request.html to submit a few test songs.</div>`;
+    els.queueList.innerHTML = `<div class="empty">No requests yet. Open request.html from the QR link on another device and send one.</div>`;
     return;
   }
 
@@ -444,107 +475,158 @@ function renderQueue() {
   `).join("");
 }
 
-function renderNotifications() {
-  const txt = state.lastNotificationText || "";
-  if (txt) {
-    els.notificationBox.classList.remove("hidden");
-    els.notificationBox.textContent = txt;
-    els.notificationBadge.textContent = "New Request";
-  } else {
-    els.notificationBox.classList.add("hidden");
-    els.notificationBadge.textContent = "No New Requests";
+function configLooksFilled() {
+  return (
+    firebaseConfig.apiKey !== "PASTE" &&
+    firebaseConfig.authDomain !== "PASTE" &&
+    firebaseConfig.projectId !== "PASTE" &&
+    firebaseConfig.appId !== "PASTE"
+  );
+}
+
+function initFirebase() {
+  if (!configLooksFilled()) {
+    showStatus("Paste your Firebase values into dj.html first.");
+    return false;
+  }
+
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    hideStatus();
+    return true;
+  } catch (err) {
+    console.error(err);
+    showStatus("Firebase could not start. Double-check the values you pasted into dj.html.");
+    return false;
   }
 }
 
-function renderAll() {
-  renderEventForm();
-  renderEventBanner();
-  renderQr();
-  renderQueue();
-  renderNotifications();
-  saveState();
-}
-
-function createOrUpdateEvent(forceLive=false) {
-  const existingId = state.event?.id || uid("event");
-  const data = {
-    id: existingId,
-    name: els.eventName.value.trim(),
-    venue: els.eventVenue.value.trim(),
-    date: els.eventDate.value,
-    startTime: els.eventStart.value,
-    endTime: els.eventEnd.value,
-    djName: els.djName.value.trim()
-  };
-
-  if (!data.name || !data.venue || !data.date || !data.startTime || !data.endTime) {
-    alert("Please fill in event name, venue, date, start time, and end time.");
+async function saveEvent(forceLive=false) {
+  const data = eventFromInputs(forceLive);
+  if (!data) {
+    showStatus("Please fill in event name, venue, date, start time, and end time.");
     return;
   }
+  if (!db) return;
 
-  if (forceLive) {
-    const now = new Date();
-    const date = now.toISOString().slice(0,10);
-    const start = new Date(now.getTime() - 60*60*1000);
-    const end = new Date(now.getTime() + 2*60*60*1000);
-    data.date = date;
-    data.startTime = start.toTimeString().slice(0,5);
-    data.endTime = end.toTimeString().slice(0,5);
+  try {
+    if (!activeEventId) {
+      activeEventId = "event_" + Date.now();
+    }
+
+    const existingActive = await db.collection("events").where("active", "==", true).get();
+    const batch = db.batch();
+
+    existingActive.forEach(doc => {
+      if (doc.id !== activeEventId) {
+        batch.set(doc.ref, { active: false }, { merge: true });
+      }
+    });
+
+    batch.set(db.collection("events").doc(activeEventId), data, { merge: true });
+    await batch.commit();
+
+    renderEvent(activeEventId, data);
+    listenRequests();
+    showStatus("Event saved live.", "success");
+  } catch (err) {
+    console.error(err);
+    showStatus("Could not save the event. Check Firestore rules.");
   }
-
-  state.event = data;
-  state.lastNotificationText = "";
-  renderAll();
 }
 
-function addDemoData() {
-  const now = new Date();
-  const date = now.toISOString().slice(0,10);
-  const start = new Date(now.getTime() - 30*60*1000);
-  const end = new Date(now.getTime() + 3*60*60*1000);
+async function loadActiveEvent() {
+  if (!db) return;
 
-  state.event = {
-    id: "demo_live_event",
-    name: "Friday Night Open Format",
-    venue: "Club X",
-    date,
-    startTime: start.toTimeString().slice(0,5),
-    endTime: end.toTimeString().slice(0,5),
-    djName: "DJ Tripp"
-  };
-  state.requests = [
-    { id: uid("req"), name: "Alex", email: "alex@email.com", artist: "Robin S", track: "Show Me Love", response: "" },
-    { id: uid("req"), name: "Mia", email: "mia@email.com", artist: "Daft Punk", track: "One More Time", response: "I got you. Keeping an eye on the floor." }
-  ];
-  state.lastNotificationText = "Demo event loaded. Queue is ready for testing.";
-  renderAll();
+  try {
+    const snap = await db.collection("events").where("active", "==", true).limit(1).get();
+    if (snap.empty) {
+      showStatus("No active event found yet. Create one first.");
+      return;
+    }
+    const doc = snap.docs[0];
+    renderEvent(doc.id, doc.data());
+    listenRequests();
+    showStatus("Active event loaded.", "success");
+  } catch (err) {
+    console.error(err);
+    showStatus("Could not load the active event.");
+  }
 }
 
-function moveRequest(id, direction) {
-  const idx = state.requests.findIndex(r => r.id === id);
+function listenRequests() {
+  if (!db || !activeEventId) return;
+
+  if (unsubscribeRequests) unsubscribeRequests();
+
+  unsubscribeRequests = db.collection("requests")
+    .where("eventId", "==", activeEventId)
+    .onSnapshot(snapshot => {
+      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      requests.sort((a,b) => {
+        if ((a.sortOrder ?? 999999) !== (b.sortOrder ?? 999999)) {
+          return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
+        }
+        return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+      });
+
+      if (snapshot.docChanges().some(change => change.type === "added")) {
+        const latestAdd = snapshot.docChanges().filter(change => change.type === "added").pop();
+        if (latestAdd) {
+          const r = latestAdd.doc.data();
+          showNotification(`New request: ${r.artist} — ${r.track} from ${r.name}`);
+        }
+      } else {
+        hideNotification();
+      }
+
+      renderQueue(requests);
+    }, err => {
+      console.error(err);
+      showStatus("Could not load requests for this event.");
+    });
+}
+
+async function moveRequest(id, direction) {
+  if (!db || !activeEventId) return;
+
+  const current = Array.from(document.querySelectorAll(".request-card"));
+  if (!current.length) return;
+
+  const snapshot = await db.collection("requests").where("eventId", "==", activeEventId).get();
+  const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  requests.sort((a,b) => {
+    if ((a.sortOrder ?? 999999) !== (b.sortOrder ?? 999999)) return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
+    return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+  });
+
+  const idx = requests.findIndex(r => r.id === id);
   if (idx < 0) return;
+
   const swapWith = idx + direction;
-  if (swapWith < 0 || swapWith >= state.requests.length) return;
-  const [item] = state.requests.splice(idx, 1);
-  state.requests.splice(swapWith, 0, item);
-  state.lastNotificationText = "";
-  renderAll();
+  if (swapWith < 0 || swapWith >= requests.length) return;
+
+  const [item] = requests.splice(idx, 1);
+  requests.splice(swapWith, 0, item);
+
+  const batch = db.batch();
+  requests.forEach((req, i) => {
+    batch.set(db.collection("requests").doc(req.id), { sortOrder: i }, { merge: true });
+  });
+  await batch.commit();
 }
 
-function deleteRequest(id) {
-  state.requests = state.requests.filter(r => r.id !== id);
-  state.lastNotificationText = "";
-  renderAll();
+async function deleteRequest(id) {
+  if (!db) return;
+  await db.collection("requests").doc(id).delete();
 }
 
-function respondToRequest(id) {
-  const req = state.requests.find(r => r.id === id);
-  if (!req) return;
-  const reply = prompt(`Response to ${req.name}:`, req.response || "");
+async function respondToRequest(id) {
+  if (!db) return;
+  const reply = prompt("Response to requester:");
   if (reply === null) return;
-  req.response = reply.trim();
-  state.lastNotificationText = "";
-  renderAll();
+  await db.collection("requests").doc(id).set({ response: reply.trim() }, { merge: true });
 }
 
 async function copyLink() {
@@ -555,8 +637,7 @@ async function copyLink() {
   }
   try {
     await navigator.clipboard.writeText(link);
-    state.lastNotificationText = "Request link copied.";
-    renderNotifications();
+    showStatus("Request link copied.", "success");
   } catch (e) {
     prompt("Copy this link:", link);
   }
@@ -572,21 +653,20 @@ function openQrImage() {
 }
 
 function openFlyerView() {
-  if (!state.event) {
+  if (!activeEventId) {
     alert("Create an event first.");
     return;
   }
   const qrUrl = getQrUrl();
-  const e = state.event;
-  const dt = buildEventDateTimes(e);
-  const when = dt ? formatDateTime(dt.start) : "";
+  const name = els.eventName.value || "Event";
+  const venue = els.eventVenue.value || "";
   const flyerHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${escapeHtml(e.name)} QR Flyer</title>
+<title>${escapeHtml(name)} QR Flyer</title>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}
 .card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}
@@ -601,8 +681,8 @@ img{width:min(420px,86vw);height:auto}
 <body>
 <div class="card">
   <div class="eyebrow">SCAN TO REQUEST A SONG</div>
-  <div class="title">${escapeHtml(e.name)}</div>
-  <div class="meta">${escapeHtml(e.venue)}<br>${escapeHtml(when)}</div>
+  <div class="title">${escapeHtml(name)}</div>
+  <div class="meta">${escapeHtml(venue)}</div>
   <img src="${qrUrl}" alt="QR code" />
   <div class="footer">Open your camera and scan</div>
   <div class="link">${escapeHtml(getRequesterLink())}</div>
@@ -616,44 +696,34 @@ img{width:min(420px,86vw);height:auto}
   win.document.close();
 }
 
-function resetDemo() {
-  if (!confirm("Reset the DJ page and clear saved demo data?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = { event: null, requests: [], lastNotificationText: "" };
-  renderAll();
-}
-
 function setView(mode) {
   els.showFullBtn.classList.toggle("active", mode === "full");
   els.showQueueBtn.classList.toggle("active", mode === "queue");
   els.djSetupSection.classList.toggle("hidden", mode === "queue");
 }
 
+function resetDemo() {
+  location.reload();
+}
+
 window.moveRequest = moveRequest;
 window.deleteRequest = deleteRequest;
 window.respondToRequest = respondToRequest;
 
-window.addEventListener("storage", (event) => {
-  if (event.key === STORAGE_KEY && event.newValue) {
-    try {
-      state = JSON.parse(event.newValue);
-      renderAll();
-    } catch (e) {}
-  }
-});
-
-els.saveEventBtn.addEventListener("click", () => createOrUpdateEvent(false));
-els.setLiveNowBtn.addEventListener("click", () => createOrUpdateEvent(true));
-els.demoDataBtn.addEventListener("click", addDemoData);
-els.resetDemoBtn.addEventListener("click", resetDemo);
+els.saveEventBtn.addEventListener("click", () => saveEvent(false));
+els.setLiveNowBtn.addEventListener("click", () => saveEvent(true));
 els.showFullBtn.addEventListener("click", () => setView("full"));
 els.showQueueBtn.addEventListener("click", () => setView("queue"));
 els.copyLinkBtn.addEventListener("click", copyLink);
 els.downloadQrBtn.addEventListener("click", openQrImage);
 els.openFlyerBtn.addEventListener("click", openFlyerView);
+els.resetDemoBtn.addEventListener("click", resetDemo);
+els.loadLiveBtn.addEventListener("click", loadActiveEvent);
 
-renderAll();
 setView("full");
+if (initFirebase()) {
+  loadActiveEvent();
+}
 </script>
 </body>
 </html>
