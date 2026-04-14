@@ -98,6 +98,7 @@
 
       <div id="requestClosedBox" class="warning hidden"></div>
       <div id="duplicateBox" class="info hidden"></div>
+      <div id="requestResponseBox" class="info hidden"></div>
       <div id="requestSuccessBox" class="success hidden"></div>
 
       <div class="requester-card">
@@ -167,6 +168,8 @@ let db = null;
 let currentEvent = null;
 let currentEventRequests = [];
 let unsubscribeCurrentRequests = null;
+let unsubscribeSubmittedRequest = null;
+let lastSubmittedRequestId = null;
 let selectedTip = 0;
 
 const eventId = new URLSearchParams(window.location.search).get("event");
@@ -177,6 +180,7 @@ const els = {
   reqEventMeta: document.getElementById("reqEventMeta"),
   requestClosedBox: document.getElementById("requestClosedBox"),
   duplicateBox: document.getElementById("duplicateBox"),
+  requestResponseBox: document.getElementById("requestResponseBox"),
   requestSuccessBox: document.getElementById("requestSuccessBox"),
   reqName: document.getElementById("reqName"),
   reqEmail: document.getElementById("reqEmail"),
@@ -244,6 +248,41 @@ function showClosed(message) {
 function hideClosed() {
   els.requestClosedBox.classList.add("hidden");
   els.submitRequestBtn.disabled = false;
+}
+
+function responseStorageKey() {
+  return "live_requests_last_request_" + (eventId || "noevent");
+}
+
+function loadSavedSubmittedRequestId() {
+  els.requestResponseBox.classList.add("hidden");
+  try {
+    return localStorage.getItem(responseStorageKey());
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveSubmittedRequestId(id) {
+  try {
+    localStorage.setItem(responseStorageKey(), id);
+  } catch (e) {}
+}
+
+function listenToSubmittedRequest() {
+  if (!db || !lastSubmittedRequestId) return;
+
+  if (unsubscribeSubmittedRequest) unsubscribeSubmittedRequest();
+
+  unsubscribeSubmittedRequest = db.collection("requests").doc(lastSubmittedRequestId)
+    .onSnapshot((doc) => {
+      if (!doc.exists) return;
+      const data = doc.data() || {};
+      if (data.response && String(data.response).trim()) {
+        els.requestResponseBox.textContent = "DJ Response: " + data.response;
+        els.requestResponseBox.classList.remove("hidden");
+      }
+    });
 }
 
 function updateDuplicateMessage() {
@@ -364,6 +403,8 @@ async function loadEvent() {
     }
     renderEvent(doc.data());
     listenCurrentEventRequests();
+    lastSubmittedRequestId = loadSavedSubmittedRequestId();
+    if (lastSubmittedRequestId) listenToSubmittedRequest();
   } catch (err) {
     console.error(err);
     showClosed("Could not load the event.");
@@ -436,6 +477,7 @@ function validateRequestAgainstRules(email, name, tipped) {
 
 async function submitRequest() {
   if (!db || !currentEvent) return;
+  els.requestResponseBox.classList.add("hidden");
 
   const name = els.reqName.value.trim();
   const email = els.reqEmail.value.trim();
@@ -470,7 +512,7 @@ async function submitRequest() {
       normalizeText(req.track) === normalizeText(track)
     );
 
-    await db.collection("requests").add({
+    const newRef = await db.collection("requests").add({
       eventId,
       name,
       email,
@@ -487,6 +529,9 @@ async function submitRequest() {
       returningRequesterCount: pastRequests.length
     });
 
+    lastSubmittedRequestId = newRef.id;
+    saveSubmittedRequestId(lastSubmittedRequestId);
+    listenToSubmittedRequest();
     els.requestSuccessBox.classList.remove("hidden");
     els.requestSuccessBox.textContent = `Submitted: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`;
     els.reqArtist.value = "";

@@ -867,7 +867,20 @@ function initFirebase() {
         window.location.href = 'login.html';
         return;
       }
+      await user.reload();
+      if (!user.emailVerified) {
+        await auth.signOut();
+        window.location.href = 'login.html?verified=needed';
+        return;
+      }
       currentUser = user;
+      try {
+        await db.collection('users').doc(user.uid).set({
+          email: user.email || '',
+          emailVerified: true,
+          lastLoginAt: Date.now()
+        }, { merge: true });
+      } catch (e) {}
       hideStatus();
       await loadActiveEvent();
     });
@@ -1168,6 +1181,16 @@ els.filterNewBtn.addEventListener("click", () => { currentFilter = "new"; render
 els.filterTippedBtn.addEventListener("click", () => { currentFilter = "tipped"; renderQueue(currentRequests); });
 els.filterDuplicateBtn.addEventListener("click", () => { currentFilter = "duplicate"; renderQueue(currentRequests); });
 els.filterReturningBtn.addEventListener("click", () => { currentFilter = "returning"; renderQueue(currentRequests); });
+els.logoutBtn.addEventListener("click", async () => {
+  if (!auth) return;
+  try {
+    await auth.signOut();
+    window.location.href = "login.html";
+  } catch (err) {
+    console.error(err);
+    showStatus("Could not log out.");
+  }
+});
 
 setView("full");
 if (initFirebase()) {
