@@ -176,6 +176,7 @@
     <div class="view-toggle">
       <button id="showFullBtn" class="active" type="button">Full DJ View</button>
       <button id="showQueueBtn" type="button">Requests Only</button>
+      <button id="newEventBtn" type="button">Create New Event</button>
       <button id="loadLiveBtn" type="button">Load Active Event</button>
     </div>
   </div>
@@ -394,6 +395,7 @@ const els = {
   showFullBtn: document.getElementById("showFullBtn"),
   showQueueBtn: document.getElementById("showQueueBtn"),
   loadLiveBtn: document.getElementById("loadLiveBtn"),
+  newEventBtn: document.getElementById("newEventBtn"),
   djSetupSection: document.getElementById("djSetupSection"),
   eventName: document.getElementById("eventName"),
   eventVenue: document.getElementById("eventVenue"),
@@ -602,6 +604,49 @@ async function copyEventLinkById(id) {
   } catch (e) {
     prompt('Copy this link:', link);
   }
+}
+
+function blankEventForm() {
+  activeEventId = null;
+  currentEventData = null;
+  if (unsubscribeRequests) {
+    unsubscribeRequests();
+    unsubscribeRequests = null;
+  }
+  currentRequests = [];
+  els.eventName.value = "";
+  els.eventVenue.value = "";
+  els.eventDate.value = "";
+  els.eventStart.value = "";
+  els.eventEnd.value = "";
+  els.djName.value = "";
+  els.requestLimitMinutes.value = "0";
+  els.cutoffMinutes.value = "0";
+  els.flagReturningRequesters.checked = true;
+  els.emailRequired.checked = true;
+  els.recurrenceType.value = "none";
+  els.recurrenceCount.value = "1";
+  els.venmoLink.value = "";
+  els.paypalLink.value = "";
+  els.notificationSoundEnabled.checked = true;
+  els.eventLink.value = "Create an event first";
+  els.qrImage.removeAttribute("src");
+  els.flyerQrImage.removeAttribute("src");
+  els.qrCaption.textContent = "Create an event to generate the QR code.";
+  els.flyerTitle.textContent = "Live Requests";
+  els.flyerMeta.textContent = "Create an event to generate the flyer-ready QR.";
+  els.activeEventBanner.innerHTML = `
+    <div>
+      <h3>New event</h3>
+      <div class="meta">Fill in the form below and click Save / Update Event to create a separate event record.</div>
+    </div>
+    <span class="badge">Unsaved</span>
+  `;
+  renderQueue([]);
+  renderNowPlaying([]);
+  renderHistory([]);
+  renderEventList(currentEventList);
+  showStatus("New event form ready. Saving now will create a separate event instead of overwriting the loaded one.", "success");
 }
 
 function renderEvent(eventId, eventData) {
@@ -862,9 +907,9 @@ async function saveEvent(forceLive=false) {
       }
     }
 
+    await refreshEventList(false);
     renderEvent(activeEventId, data);
     listenRequests();
-    await refreshEventList(true);
     showStatus("Event saved live.", "success");
   } catch (err) {
     console.error(err);
@@ -1098,6 +1143,7 @@ els.copyLinkBtn.addEventListener("click", copyLink);
 els.downloadQrBtn.addEventListener("click", openQrImage);
 els.openFlyerBtn.addEventListener("click", openFlyerView);
 els.loadLiveBtn.addEventListener("click", loadActiveEvent);
+els.newEventBtn.addEventListener("click", blankEventForm);
 els.filterAllBtn.addEventListener("click", () => { currentFilter = "all"; renderQueue(currentRequests); });
 els.filterNewBtn.addEventListener("click", () => { currentFilter = "new"; renderQueue(currentRequests); });
 els.filterTippedBtn.addEventListener("click", () => { currentFilter = "tipped"; renderQueue(currentRequests); });
@@ -1106,6 +1152,7 @@ els.filterReturningBtn.addEventListener("click", () => { currentFilter = "return
 
 setView("full");
 if (initFirebase()) {
+  refreshEventList(false);
   loadActiveEvent();
 }
 </script>
