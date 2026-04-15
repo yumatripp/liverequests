@@ -93,6 +93,11 @@
         <h3>Follow</h3>
         <div id="socialLinksWrap" class="tip-links"></div>
       </div>
+
+      <div id="socialLinksCard" class="requester-card hidden">
+        <h3>Follow</h3>
+        <div id="socialLinksWrap" class="tip-links"></div>
+      </div>
     </div>
   </div>
 </aside>
@@ -147,6 +152,8 @@ const els = {
   submitRequestBtn: document.getElementById("submitRequestBtn"),
   tipLinksWrap: document.getElementById("tipLinksWrap"),
   socialLinksCard: document.getElementById("socialLinksCard"),
+  socialLinksWrap: document.getElementById("socialLinksWrap"),
+  socialLinksCard: document.getElementById("socialLinksCard"),
   socialLinksWrap: document.getElementById("socialLinksWrap")
 };
 
@@ -195,6 +202,7 @@ function renderEvent(e){
   els.reqEventMeta.textContent = `${e.venue||"Venue not set"} · ${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add event date/time"}`;
   els.emailFieldWrap.classList.toggle("hidden", e.emailRequired===false);
   renderTipLinks();
+  renderSocialLinks();
   renderSocialLinks();
 
   const s = eventStatus(e);
