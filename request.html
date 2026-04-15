@@ -7,18 +7,36 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
-    :root{--bg:#0a0b0f;--panel:#12141b;--line:#252938;--text:#f3f5fb;--muted:#9ba3b7;--green:#3ddc84;--yellow:#ffd166;--blue:#7cc7ff;--shadow:0 18px 50px rgba(0,0,0,.35)}
-    *{box-sizing:border-box} html,body{margin:0;padding:0;background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-    body{display:flex;align-items:center;justify-content:center;padding:18px}.phone-shell{width:100%;max-width:430px;margin:0 auto;padding:14px;border-radius:34px;background:linear-gradient(180deg,#0c0e13,#11151d);border:1px solid #2a3040;box-shadow:var(--shadow)}
-    .phone-top{width:130px;height:24px;background:#050607;margin:0 auto 10px;border-radius:0 0 18px 18px}.phone-screen{min-height:780px;background:linear-gradient(180deg,#0e121a,#151a23);border-radius:24px;border:1px solid #2a3040;overflow:hidden;display:flex;flex-direction:column}
+    :root{--bg:#0a0b0f;--panel:#12141b;--line:#252938;--text:#f3f5fb;--muted:#9ba3b7;--green:#3ddc84;--shadow:0 18px 50px rgba(0,0,0,.35)}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    body{display:flex;align-items:center;justify-content:center;padding:18px}
+    .phone-shell{width:100%;max-width:430px;margin:0 auto;padding:14px;border-radius:34px;background:linear-gradient(180deg,#0c0e13,#11151d);border:1px solid #2a3040;box-shadow:var(--shadow)}
+    .phone-top{width:130px;height:24px;background:#050607;margin:0 auto 10px;border-radius:0 0 18px 18px}
+    .phone-screen{min-height:780px;background:linear-gradient(180deg,#0e121a,#151a23);border-radius:24px;border:1px solid #2a3040;overflow:hidden;display:flex;flex-direction:column}
     .requester-header{padding:18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(61,220,132,.08),rgba(124,199,255,.03))}
-    .requester-header h2{margin:0;font-size:22px}.requester-header p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
-    .requester-body{padding:18px;display:grid;gap:14px}.requester-card{background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px}.requester-card h3{margin:0 0 8px;font-size:16px}.event-lock{font-size:14px;line-height:1.5;color:var(--muted)}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px} input{width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;padding:12px 13px;font-size:15px;outline:none}
-    .tip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.tip-btn{appearance:none;border:1px solid #2d3648;background:#151a24;color:var(--text);border-radius:12px;padding:12px 8px;font-size:14px;font-weight:800;cursor:pointer}.tip-btn.active{background:rgba(61,220,132,.13);border-color:#2f8e5c;color:#c9f8dd}
-    .suggestions{display:grid;gap:6px;margin-top:8px}.suggestion{padding:10px 12px;border-radius:12px;border:1px solid #283246;background:#0f141d;font-size:14px;cursor:pointer;transition:.18s ease;text-align:left;color:var(--text)}
-    .helper{font-size:12px;color:var(--muted);line-height:1.5}.success,.warning,.info{border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5}.success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}.warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}.info{color:#ffd7b8;background:#1b1208;border:1px solid #7d4b21}.hidden{display:none!important}
-    .primary-btn{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;padding:12px 14px;border-radius:12px;font-size:14px;background:var(--green);color:#08100b}.tip-links{display:flex;gap:10px;flex-wrap:wrap}.tip-link{padding:10px 12px;border-radius:10px;border:1px solid #2c3345;background:#1a1f2a;color:#f3f5fb;text-decoration:none;font-size:13px}
+    .requester-header h2{margin:0;font-size:22px}
+    .requester-header p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+    .requester-body{padding:18px;display:grid;gap:14px}
+    .requester-card{background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px}
+    .requester-card h3{margin:0 0 8px;font-size:16px}
+    .event-lock{font-size:14px;line-height:1.5;color:var(--muted)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input{width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;padding:12px 13px;font-size:15px;outline:none}
+    .tip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .tip-btn{appearance:none;border:1px solid #2d3648;background:#151a24;color:var(--text);border-radius:12px;padding:12px 8px;font-size:14px;font-weight:800;cursor:pointer}
+    .tip-btn.active{background:rgba(61,220,132,.13);border-color:#2f8e5c;color:#c9f8dd}
+    .suggestions{display:grid;gap:6px;margin-top:8px}
+    .suggestion{padding:10px 12px;border-radius:12px;border:1px solid #283246;background:#0f141d;font-size:14px;cursor:pointer;text-align:left;color:var(--text)}
+    .helper{font-size:12px;color:var(--muted);line-height:1.5}
+    .success,.warning,.info{border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5}
+    .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
+    .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
+    .info{color:#ffd7b8;background:#1b1208;border:1px solid #7d4b21}
+    .hidden{display:none!important}
+    .primary-btn{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;padding:12px 14px;border-radius:12px;font-size:14px;background:var(--green);color:#08100b}
+    .tip-links{display:flex;gap:10px;flex-wrap:wrap}
+    .tip-link{padding:10px 12px;border-radius:10px;border:1px solid #2c3345;background:#1a1f2a;color:#f3f5fb;text-decoration:none;font-size:13px}
     @media (max-width:760px){.tip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phone-screen{min-height:auto}}
   </style>
 </head>
@@ -60,7 +78,7 @@
         <label for="reqTrack" style="margin-top:10px;">Track title</label>
         <input id="reqTrack" placeholder="Track title" />
         <div class="suggestions" id="suggestionsBox"></div>
-        <div class="helper">Duplicate detection uses the public queue only, so private requester data stays hidden.</div>
+        <div class="helper">Duplicate detection reads only the public queue.</div>
       </div>
 
       <div class="requester-card">
@@ -79,19 +97,59 @@
     </div>
   </div>
 </aside>
+
 <script>
-const firebaseConfig = { apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
+const firebaseConfig = {
+  apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
   projectId: "live-requests-73c57",
-  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc" };
-const sampleSuggestions = [{ artist:"Daft Punk", track:"One More Time" },{ artist:"Drake", track:"One Dance" },{ artist:"Avicii", track:"Levels" },{ artist:"Calvin Harris", track:"I'm Not Alone" },{ artist:"Disclosure", track:"Latch" },{ artist:"Rihanna", track:"We Found Love" },{ artist:"Swedish House Mafia", track:"Don't You Worry Child" },{ artist:"Robin S", track:"Show Me Love" }];
-let db=null, currentEvent=null, currentQueue=[], unsubscribeQueue=null, selectedTip=0;
-const eventId=new URLSearchParams(window.location.search).get("event");
-const requesterIdKey="live_requests_requester_id";
-const responseKey=()=> "live_requests_last_public_queue_" + (eventId || "noevent");
-let requesterId=localStorage.getItem(requesterIdKey) || ("rq_" + Math.random().toString(36).slice(2,10)); localStorage.setItem(requesterIdKey, requesterId);
-let lastPublicQueueId=localStorage.getItem(responseKey()) || null;
-const els={ liveRequestsSubtitle:document.getElementById("liveRequestsSubtitle"), reqEventTitle:document.getElementById("reqEventTitle"), reqEventMeta:document.getElementById("reqEventMeta"), requestClosedBox:document.getElementById("requestClosedBox"), duplicateBox:document.getElementById("duplicateBox"), requestResponseBox:document.getElementById("requestResponseBox"), queueStatusBox:document.getElementById("queueStatusBox"), requestSuccessBox:document.getElementById("requestSuccessBox"), reqName:document.getElementById("reqName"), reqEmail:document.getElementById("reqEmail"), emailFieldWrap:document.getElementById("emailFieldWrap"), reqArtist:document.getElementById("reqArtist"), reqTrack:document.getElementById("reqTrack"), suggestionsBox:document.getElementById("suggestionsBox"), submitRequestBtn:document.getElementById("submitRequestBtn"), tipButtons:Array.from(document.querySelectorAll(".tip-btn")), tipLinksWrap:document.getElementById("tipLinksWrap") };
+  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc"
+};
+
+const sampleSuggestions = [
+  { artist:"Daft Punk", track:"One More Time" },
+  { artist:"Drake", track:"One Dance" },
+  { artist:"Avicii", track:"Levels" },
+  { artist:"Calvin Harris", track:"I'm Not Alone" },
+  { artist:"Disclosure", track:"Latch" },
+  { artist:"Rihanna", track:"We Found Love" },
+  { artist:"Swedish House Mafia", track:"Don't You Worry Child" },
+  { artist:"Robin S", track:"Show Me Love" }
+];
+
+let db = null;
+let currentEvent = null;
+let currentQueue = [];
+let unsubscribeQueue = null;
+let selectedTip = 0;
+
+const eventId = new URLSearchParams(window.location.search).get("event");
+const requesterIdKey = "live_requests_requester_id";
+const responseKey = () => "live_requests_last_public_queue_" + (eventId || "noevent");
+let requesterId = localStorage.getItem(requesterIdKey) || ("rq_" + Math.random().toString(36).slice(2,10));
+localStorage.setItem(requesterIdKey, requesterId);
+let lastPublicQueueId = localStorage.getItem(responseKey()) || null;
+
+const els = {
+  liveRequestsSubtitle: document.getElementById("liveRequestsSubtitle"),
+  reqEventTitle: document.getElementById("reqEventTitle"),
+  reqEventMeta: document.getElementById("reqEventMeta"),
+  requestClosedBox: document.getElementById("requestClosedBox"),
+  duplicateBox: document.getElementById("duplicateBox"),
+  requestResponseBox: document.getElementById("requestResponseBox"),
+  queueStatusBox: document.getElementById("queueStatusBox"),
+  requestSuccessBox: document.getElementById("requestSuccessBox"),
+  reqName: document.getElementById("reqName"),
+  reqEmail: document.getElementById("reqEmail"),
+  emailFieldWrap: document.getElementById("emailFieldWrap"),
+  reqArtist: document.getElementById("reqArtist"),
+  reqTrack: document.getElementById("reqTrack"),
+  suggestionsBox: document.getElementById("suggestionsBox"),
+  submitRequestBtn: document.getElementById("submitRequestBtn"),
+  tipButtons: Array.from(document.querySelectorAll(".tip-btn")),
+  tipLinksWrap: document.getElementById("tipLinksWrap")
+};
+
 function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
 function normalize(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function dt(v){const d=new Date(v); return isNaN(d) ? "Invalid date" : d.toLocaleString([], {year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}
@@ -100,19 +158,243 @@ function syncTipButtons(){ els.tipButtons.forEach(btn=>btn.classList.toggle("act
 function showClosed(msg){ els.requestClosedBox.textContent=msg; els.requestClosedBox.classList.remove("hidden"); els.submitRequestBtn.disabled=true; }
 function hideClosed(){ els.requestClosedBox.classList.add("hidden"); els.submitRequestBtn.disabled=false; }
 function configLooksFilled(){ return firebaseConfig.apiKey!=="PASTE" && firebaseConfig.authDomain!=="PASTE" && firebaseConfig.projectId!=="PASTE" && firebaseConfig.appId!=="PASTE"; }
-function renderTipLinks(){ els.tipLinksWrap.innerHTML=""; if(!currentEvent) return; const links=[]; if(currentEvent.tipLinkVenmo) links.push(`<a class="tip-link" href="${currentEvent.tipLinkVenmo}" target="_blank" rel="noreferrer">Tip with Venmo</a>`); if(currentEvent.tipLinkPaypal) links.push(`<a class="tip-link" href="${currentEvent.tipLinkPaypal}" target="_blank" rel="noreferrer">Tip with PayPal</a>`); els.tipLinksWrap.innerHTML=links.join(""); }
-function renderEvent(e){ currentEvent=e; els.reqEventTitle.textContent=e.name||"Untitled Event"; els.liveRequestsSubtitle.textContent="Request Your Songs for " + (e.name || "this event"); els.reqEventMeta.textContent=`${e.venue||"Venue not set"} · ${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add event date/time"}`; els.emailFieldWrap.classList.toggle("hidden", e.emailRequired===false); renderTipLinks(); const s=eventStatus(e); if(s==="upcoming") showClosed("Requests are closed right now. This event has not started yet."); else if(s==="ended") showClosed("Requests are closed. This event has already ended."); else if(s==="draft") showClosed("Requests are unavailable until the DJ fills in the event time window."); else hideClosed(); }
-function updateDuplicateMessage(){ const artistNorm=normalize(els.reqArtist.value), trackNorm=normalize(els.reqTrack.value); if(!artistNorm || !trackNorm){ els.duplicateBox.classList.add("hidden"); return []; } const matches=currentQueue.filter(q=>normalize(q.artist)===artistNorm && normalize(q.track)===trackNorm && (q.status||"new")!=="history"); if(!matches.length){ els.duplicateBox.classList.add("hidden"); return []; } els.duplicateBox.textContent=matches.length===1 ? "This song was already requested for this event. You can still submit it." : `This song has already been requested ${matches.length} times for this event. You can still submit it.`; els.duplicateBox.classList.remove("hidden"); return matches; }
-function updateQueueStatus(){ if(!lastPublicQueueId){ els.queueStatusBox.classList.add("hidden"); return; } const req=currentQueue.find(q=>q.id===lastPublicQueueId); if(!req){ els.queueStatusBox.classList.add("hidden"); return; } els.queueStatusBox.textContent="Your request was recieved."; els.queueStatusBox.classList.remove("hidden"); if(req.response){ els.requestResponseBox.textContent="DJ Response: " + req.response; els.requestResponseBox.classList.remove("hidden"); } }
-function listenQueue(){ if(!db || !eventId) return; if(unsubscribeQueue) unsubscribeQueue(); unsubscribeQueue=db.collection("queue_public").where("eventId","==",eventId).onSnapshot(snap=>{ currentQueue=snap.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>{ const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1; const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1; const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip; return (a.position||999999)-(b.position||999999); }); updateDuplicateMessage(); updateQueueStatus(); }); }
-async function loadEvent(){ if(!db) return; if(!eventId){ showClosed("This link is missing the event ID."); els.reqEventTitle.textContent="Missing event"; els.reqEventMeta.textContent="Ask the DJ for the correct QR code or request link."; return; } try{ const doc=await db.collection("events").doc(eventId).get(); if(!doc.exists){ showClosed("That event was not found."); els.reqEventTitle.textContent="Event not found"; els.reqEventMeta.textContent="Ask the DJ for a new link."; return; } renderEvent(doc.data()); listenQueue(); } catch(err){ console.error(err); showClosed("Could not load the event."); } }
-function filterSuggestions(){ const q=`${els.reqArtist.value.trim().toLowerCase()} ${els.reqTrack.value.trim().toLowerCase()}`.trim(); if(!q){ els.suggestionsBox.innerHTML=""; updateDuplicateMessage(); return; } const matches=sampleSuggestions.filter(item=>`${item.artist} ${item.track}`.toLowerCase().includes(q)).slice(0,5); els.suggestionsBox.innerHTML=matches.map(item=>`<button class="suggestion" type="button" onclick="applySuggestion('${String(item.artist).replaceAll("'","\\'")}','${String(item.track).replaceAll("'","\\'")}')"><strong>${esc(item.artist)}</strong> — ${esc(item.track)}</button>`).join(""); updateDuplicateMessage(); }
-function applySuggestion(artist,track){ els.reqArtist.value=artist; els.reqTrack.value=track; els.suggestionsBox.innerHTML=""; updateDuplicateMessage(); }
-function validateRules(name,email,tipped){ if(!currentEvent) return "No event is loaded yet."; if(eventStatus(currentEvent)!=="live") return "Requests are not open right now."; if(!name) return "Please enter your name."; if(currentEvent.emailRequired!==false && !email) return "Please enter your email."; if(!tipped){ const cutoffMinutes=Number(currentEvent.cutoffMinutes||0); if(cutoffMinutes>0){ const cutoffAt=Number(currentEvent.endAt)-cutoffMinutes*60000; if(Date.now()>=cutoffAt) return `Requests are closed because the cutoff is ${cutoffMinutes} minutes before the end of the show.`; } const limitMinutes=Number(currentEvent.requestLimitMinutes||0); if(limitMinutes>0){ const windowStart=Date.now()-limitMinutes*60000; const overrideGranted=currentQueue.some(q=>q.requesterKey===requesterId && q.limitOverride===true && Number(q.createdAt||0)>=windowStart); if(!overrideGranted){ const recent=currentQueue.find(q=>q.requesterKey===requesterId && Number(q.createdAt||0)>=windowStart); if(recent) return `You can only make one request every ${limitMinutes} minutes for this event.`; } } } return null; }
-async function submitRequest(){ if(!db || !currentEvent) return; const name=els.reqName.value.trim(), email=els.reqEmail.value.trim(), artist=els.reqArtist.value.trim(), track=els.reqTrack.value.trim(); const tipped=selectedTip>0; if(!artist || !track){ alert("Please fill in artist and track title."); return; } const error=validateRules(name,email,tipped); if(error){ alert(error); return; } try{ const duplicateMatches=updateDuplicateMessage(); const publicRef=db.collection("queue_public").doc(); const privateRef=db.collection("requests_private").doc(publicRef.id); const lookup=(currentEvent.emailRequired!==false ? email.toLowerCase() : name.toLowerCase()); const previous=await db.collection("requests_private").where("eventOwnerUid","==",currentEvent.ownerUid).where("requesterLookup","==",lookup).get(); const pastRequests=previous.docs.map(doc=>doc.data()).filter(r=>r.eventId!==eventId); const now=Date.now(); await publicRef.set({ eventId, artist, track, tip:selectedTip, status:"new", isDuplicate:duplicateMatches.length>0, position:currentQueue.filter(q=>(q.status||"new")!=="history").length+1, requesterKey:requesterId, response:"", limitOverride:false, createdAt:now, updatedAt:now }); await privateRef.set({ eventId, eventOwnerUid:currentEvent.ownerUid, name, email:currentEvent.emailRequired!==false ? email : "", requesterLookup:lookup, requesterKey:requesterId, artist, track, tip:selectedTip, response:"", createdAt:now, sortOrder:currentQueue.filter(q=>(q.status||"new")!=="history").length, isDuplicate:duplicateMatches.length>0, duplicateCount:duplicateMatches.length, returningRequester:pastRequests.length>0, returningRequesterCount:pastRequests.length, status:"new", limitOverride:false }); lastPublicQueueId=publicRef.id; localStorage.setItem(responseKey(), lastPublicQueueId); els.requestSuccessBox.classList.remove("hidden"); els.requestSuccessBox.textContent=`Request sent: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`; els.queueStatusBox.textContent="Your request was recieved."; els.queueStatusBox.classList.remove("hidden"); els.reqArtist.value=""; els.reqTrack.value=""; els.suggestionsBox.innerHTML=""; updateDuplicateMessage(); } catch(err){ console.error(err); alert("Could not submit request. Check the Firebase values and Firestore rules."); } }
-function initFirebase(){ if(!configLooksFilled()){ showClosed("This page is not ready yet. The Firebase values still need to be pasted into request.html."); return false; } try{ firebase.initializeApp(firebaseConfig); db=firebase.firestore(); return true; } catch(err){ console.error(err); showClosed("Firebase could not start. Double-check the values pasted into request.html."); return false; } }
-window.applySuggestion=applySuggestion; els.reqArtist.addEventListener("input",filterSuggestions); els.reqTrack.addEventListener("input",filterSuggestions); els.submitRequestBtn.addEventListener("click",submitRequest); els.tipButtons.forEach(btn=>btn.addEventListener("click",()=>{ selectedTip=Number(btn.dataset.tip||0); syncTipButtons(); }));
-syncTipButtons(); if(initFirebase()) loadEvent();
+
+function renderTipLinks(){
+  els.tipLinksWrap.innerHTML = "";
+  if(!currentEvent) return;
+  const links = [];
+  if(currentEvent.tipLinkVenmo) links.push(`<a class="tip-link" href="${currentEvent.tipLinkVenmo}" target="_blank" rel="noreferrer">Tip with Venmo</a>`);
+  if(currentEvent.tipLinkPaypal) links.push(`<a class="tip-link" href="${currentEvent.tipLinkPaypal}" target="_blank" rel="noreferrer">Tip with PayPal</a>`);
+  els.tipLinksWrap.innerHTML = links.join("");
+}
+
+function renderEvent(e){
+  currentEvent = e;
+  els.reqEventTitle.textContent = e.name || "Untitled Event";
+  els.liveRequestsSubtitle.textContent = "Request Your Songs for " + (e.name || "this event");
+  els.reqEventMeta.textContent = `${e.venue||"Venue not set"} · ${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add event date/time"}`;
+  els.emailFieldWrap.classList.toggle("hidden", e.emailRequired===false);
+  renderTipLinks();
+
+  const s = eventStatus(e);
+  if(s==="upcoming") showClosed("Requests are closed right now. This event has not started yet.");
+  else if(s==="ended") showClosed("Requests are closed. This event has already ended.");
+  else if(s==="draft") showClosed("Requests are unavailable until the DJ fills in the event time window.");
+  else hideClosed();
+}
+
+function updateDuplicateMessage(){
+  const artistNorm = normalize(els.reqArtist.value);
+  const trackNorm = normalize(els.reqTrack.value);
+  if(!artistNorm || !trackNorm){ els.duplicateBox.classList.add("hidden"); return []; }
+  const matches = currentQueue.filter(q => normalize(q.artist)===artistNorm && normalize(q.track)===trackNorm && (q.status||"new")!=="history");
+  if(!matches.length){ els.duplicateBox.classList.add("hidden"); return []; }
+  els.duplicateBox.textContent = matches.length===1
+    ? "This song was already requested for this event. You can still submit it."
+    : `This song has already been requested ${matches.length} times for this event. You can still submit it.`;
+  els.duplicateBox.classList.remove("hidden");
+  return matches;
+}
+
+function updateQueueStatus(){
+  if(!lastPublicQueueId){ els.queueStatusBox.classList.add("hidden"); return; }
+  const req = currentQueue.find(q => q.id===lastPublicQueueId);
+  if(!req){ els.queueStatusBox.classList.add("hidden"); return; }
+  els.queueStatusBox.textContent = "Your request was recieved.";
+  els.queueStatusBox.classList.remove("hidden");
+  if(req.response){
+    els.requestResponseBox.textContent = "DJ Response: " + req.response;
+    els.requestResponseBox.classList.remove("hidden");
+  }
+}
+
+function listenQueue(){
+  if(!db || !eventId) return;
+  if(unsubscribeQueue) unsubscribeQueue();
+  unsubscribeQueue = db.collection("queue_public").where("eventId","==",eventId).onSnapshot(snap => {
+    currentQueue = snap.docs.map(doc => ({id:doc.id, ...doc.data()})).sort((a,b) => {
+      const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1;
+      const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1;
+      const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip;
+      return (a.position||999999)-(b.position||999999);
+    });
+    updateDuplicateMessage();
+    updateQueueStatus();
+  });
+}
+
+async function loadEvent(){
+  if(!db) return;
+  if(!eventId){
+    showClosed("This link is missing the event ID.");
+    els.reqEventTitle.textContent = "Missing event";
+    els.reqEventMeta.textContent = "Ask the DJ for the correct QR code or request link.";
+    return;
+  }
+  try{
+    const doc = await db.collection("events").doc(eventId).get();
+    if(!doc.exists){
+      showClosed("That event was not found.");
+      els.reqEventTitle.textContent = "Event not found";
+      els.reqEventMeta.textContent = "Ask the DJ for a new link.";
+      return;
+    }
+    renderEvent(doc.data());
+    listenQueue();
+  }catch(err){
+    console.error(err);
+    showClosed("Could not load the event.");
+  }
+}
+
+function filterSuggestions(){
+  const q = `${els.reqArtist.value.trim().toLowerCase()} ${els.reqTrack.value.trim().toLowerCase()}`.trim();
+  if(!q){ els.suggestionsBox.innerHTML = ""; updateDuplicateMessage(); return; }
+  const matches = sampleSuggestions.filter(item => `${item.artist} ${item.track}`.toLowerCase().includes(q)).slice(0,5);
+  els.suggestionsBox.innerHTML = matches.map(item => `<button class="suggestion" type="button" onclick="applySuggestion('${String(item.artist).replaceAll("'","\\'")}','${String(item.track).replaceAll("'","\\'")}')"><strong>${esc(item.artist)}</strong> — ${esc(item.track)}</button>`).join("");
+  updateDuplicateMessage();
+}
+
+function applySuggestion(artist, track){
+  els.reqArtist.value = artist;
+  els.reqTrack.value = track;
+  els.suggestionsBox.innerHTML = "";
+  updateDuplicateMessage();
+}
+
+function validateRules(name, email, tipped){
+  if(!currentEvent) return "No event is loaded yet.";
+  if(eventStatus(currentEvent)!=="live") return "Requests are not open right now.";
+  if(!name) return "Please enter your name.";
+  if(currentEvent.emailRequired!==false && !email) return "Please enter your email.";
+
+  if(!tipped){
+    const cutoffMinutes = Number(currentEvent.cutoffMinutes||0);
+    if(cutoffMinutes>0){
+      const cutoffAt = Number(currentEvent.endAt) - cutoffMinutes*60000;
+      if(Date.now() >= cutoffAt) return `Requests are closed because the cutoff is ${cutoffMinutes} minutes before the end of the show.`;
+    }
+
+    const limitMinutes = Number(currentEvent.requestLimitMinutes||0);
+    if(limitMinutes>0){
+      const windowStart = Date.now() - limitMinutes*60000;
+      const overrideGranted = currentQueue.some(q => q.requesterKey===requesterId && q.limitOverride===true && Number(q.createdAt||0) >= windowStart);
+      if(!overrideGranted){
+        const recent = currentQueue.find(q => q.requesterKey===requesterId && Number(q.createdAt||0) >= windowStart);
+        if(recent) return `You can only make one request every ${limitMinutes} minutes for this event.`;
+      }
+    }
+  }
+  return null;
+}
+
+async function submitRequest(){
+  if(!db || !currentEvent) return;
+
+  const name = els.reqName.value.trim();
+  const email = els.reqEmail.value.trim();
+  const artist = els.reqArtist.value.trim();
+  const track = els.reqTrack.value.trim();
+  const tipped = selectedTip > 0;
+
+  if(!artist || !track){
+    alert("Please fill in artist and track title.");
+    return;
+  }
+
+  const error = validateRules(name, email, tipped);
+  if(error){
+    alert(error);
+    return;
+  }
+
+  try{
+    const duplicateMatches = updateDuplicateMessage();
+    const publicRef = db.collection("queue_public").doc();
+    const privateRef = db.collection("requests_private").doc(publicRef.id);
+    const lookup = (currentEvent.emailRequired!==false ? email.toLowerCase() : name.toLowerCase());
+    const now = Date.now();
+
+    await publicRef.set({
+      eventId,
+      artist,
+      track,
+      tip: selectedTip,
+      status: "new",
+      isDuplicate: duplicateMatches.length > 0,
+      position: currentQueue.filter(q => (q.status||"new")!=="history").length + 1,
+      requesterKey: requesterId,
+      response: "",
+      limitOverride: false,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await privateRef.set({
+      eventId,
+      eventOwnerUid: currentEvent.ownerUid,
+      name,
+      email: currentEvent.emailRequired!==false ? email : "",
+      requesterLookup: lookup,
+      requesterKey: requesterId,
+      artist,
+      track,
+      tip: selectedTip,
+      response: "",
+      createdAt: now,
+      sortOrder: currentQueue.filter(q => (q.status||"new")!=="history").length,
+      isDuplicate: duplicateMatches.length > 0,
+      duplicateCount: duplicateMatches.length,
+      returningRequester: false,
+      returningRequesterCount: 0,
+      status: "new",
+      limitOverride: false
+    });
+
+    lastPublicQueueId = publicRef.id;
+    localStorage.setItem(responseKey(), lastPublicQueueId);
+
+    els.requestSuccessBox.classList.remove("hidden");
+    els.requestSuccessBox.textContent = `Request sent: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`;
+    els.queueStatusBox.textContent = "Your request was recieved.";
+    els.queueStatusBox.classList.remove("hidden");
+    els.reqArtist.value = "";
+    els.reqTrack.value = "";
+    els.suggestionsBox.innerHTML = "";
+    updateDuplicateMessage();
+  }catch(err){
+    console.error(err);
+    alert("Could not submit request. Check the Firebase values and Firestore rules.");
+  }
+}
+
+function initFirebase(){
+  if(!configLooksFilled()){
+    showClosed("This page is not ready yet. The Firebase values still need to be pasted into request.html.");
+    return false;
+  }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    return true;
+  }catch(err){
+    console.error(err);
+    showClosed("Firebase could not start. Double-check the values pasted into request.html.");
+    return false;
+  }
+}
+
+window.applySuggestion = applySuggestion;
+els.reqArtist.addEventListener("input", filterSuggestions);
+els.reqTrack.addEventListener("input", filterSuggestions);
+els.submitRequestBtn.addEventListener("click", submitRequest);
+els.tipButtons.forEach(btn => btn.addEventListener("click", () => {
+  selectedTip = Number(btn.dataset.tip||0);
+  syncTipButtons();
+}));
+
+syncTipButtons();
+if(initFirebase()) loadEvent();
 </script>
 </body>
 </html>
