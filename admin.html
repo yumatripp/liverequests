@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Requests - Admin</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);color:#f3f5fb;padding:18px}
+    .app{max-width:1100px;margin:0 auto}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    .panel{background:#12141b;border:1px solid #252938;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+    .panel h2{margin:0}
+    .header{padding:18px;border-bottom:1px solid #252938}
+    .body{padding:18px}
+    .card{background:#10161f;border:1px solid #283246;border-radius:14px;padding:14px;margin-bottom:12px}
+    button{padding:10px 12px;border-radius:12px;border:none;cursor:pointer;background:#3ddc84;color:#08100b;font-weight:700}
+    .ghost{background:#1a1f2a;color:#f3f5fb;border:1px solid #2c3345}
+    .muted{color:#9ba3b7;font-size:13px;line-height:1.5}
+    .warn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35;border-radius:12px;padding:12px 13px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <h1 style="margin:0">Live Requests Admin</h1>
+      <div class="muted">Private users list for the main admin only.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="ghost" id="backBtn" type="button">Back to DJ</button>
+      <button id="logoutBtn" type="button">Logout</button>
+    </div>
+  </div>
+  <div id="blockedBox" class="warn" style="display:none"></div>
+  <section class="panel">
+    <div class="header"><h2>Users</h2></div>
+    <div class="body" id="usersList"><div class="muted">Loading users…</div></div>
+  </section>
+</div>
+<script>
+const firebaseConfig = { apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
+  authDomain: "live-requests-73c57.firebaseapp.com",
+  projectId: "live-requests-73c57",
+  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc" };
+const ADMIN_EMAILS = ["yuma.tripp+req@gmail.com"];
+let auth = null; let db = null;
+const usersList = document.getElementById('usersList');
+const blockedBox = document.getElementById('blockedBox');
+
+function fmt(ts){ const d=new Date(ts||0); return isNaN(d)?'—':d.toLocaleString(); }
+function showBlocked(msg){ blockedBox.textContent=msg; blockedBox.style.display='block'; usersList.innerHTML=''; }
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  auth.onAuthStateChanged(async (user)=>{
+    if(!user){ window.location.href='login.html'; return; }
+    const email=(user.email||'').toLowerCase();
+    if(!ADMIN_EMAILS.map(v=>v.toLowerCase()).includes(email)){
+      showBlocked('This page is private. Your account is not on the admin allow-list. Add your email to ADMIN_EMAILS in admin.html.');
+      return;
+    }
+    const snap = await db.collection('users').orderBy('createdAt','desc').get();
+    if(snap.empty){ usersList.innerHTML='<div class="muted">No users found yet.</div>'; return; }
+    usersList.innerHTML = snap.docs.map(doc=>{
+      const u = doc.data() || {};
+      return `<div class="card"><strong>${u.email || doc.id}</strong><div class="muted">Created: ${fmt(u.createdAt)}<br>Verified: ${u.emailVerified ? 'Yes' : 'No'}<br>Last login: ${u.lastLoginAt ? fmt(u.lastLoginAt) : '—'}<br>Role: ${u.role || 'dj_user'}</div></div>`;
+    }).join('');
+  });
+} catch(e){ showBlocked('Paste your Firebase values into admin.html first.'); }
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{ if(auth){ await auth.signOut(); } window.location.href='login.html'; });
+document.getElementById('backBtn').addEventListener('click', ()=>{ window.location.href='dj.html'; });
+</script>
+</body>
+</html>
