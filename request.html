@@ -82,18 +82,17 @@
       </div>
 
       <div class="requester-card">
-        <h3>Tip to move up the queue</h3>
-        <div class="tip-grid">
-          <button class="tip-btn active" data-tip="0" type="button">$0</button>
-          <button class="tip-btn" data-tip="2" type="button">$2</button>
-          <button class="tip-btn" data-tip="5" type="button">$5</button>
-          <button class="tip-btn" data-tip="10" type="button">$10</button>
-        </div>
-        <div class="helper" style="margin-top:10px;">Choose a tip amount above. Tipped requests bypass the time limit and cutoff settings.</div>
+        <h3>Support the DJ</h3>
+        <div class="helper">Tip links show here only if the event includes them.</div>
         <div id="tipLinksWrap" class="tip-links" style="margin-top:10px;"></div>
       </div>
 
       <button class="primary-btn" id="submitRequestBtn" type="button">Submit Request</button>
+
+      <div id="socialLinksCard" class="requester-card hidden">
+        <h3>Follow</h3>
+        <div id="socialLinksWrap" class="tip-links"></div>
+      </div>
     </div>
   </div>
 </aside>
@@ -146,15 +145,16 @@ const els = {
   reqTrack: document.getElementById("reqTrack"),
   suggestionsBox: document.getElementById("suggestionsBox"),
   submitRequestBtn: document.getElementById("submitRequestBtn"),
-  tipButtons: Array.from(document.querySelectorAll(".tip-btn")),
-  tipLinksWrap: document.getElementById("tipLinksWrap")
+  tipLinksWrap: document.getElementById("tipLinksWrap"),
+  socialLinksCard: document.getElementById("socialLinksCard"),
+  socialLinksWrap: document.getElementById("socialLinksWrap")
 };
 
 function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
 function normalize(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function dt(v){const d=new Date(v); return isNaN(d) ? "Invalid date" : d.toLocaleString([], {year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}
 function eventStatus(e){ if(!e||!e.startAt||!e.endAt) return "draft"; const now=Date.now(); if(now<e.startAt) return "upcoming"; if(now>e.endAt) return "ended"; return "live"; }
-function syncTipButtons(){ els.tipButtons.forEach(btn=>btn.classList.toggle("active", Number(btn.dataset.tip)===selectedTip)); }
+function syncTipButtons(){}
 function showClosed(msg){ els.requestClosedBox.textContent=msg; els.requestClosedBox.classList.remove("hidden"); els.submitRequestBtn.disabled=true; }
 function hideClosed(){ els.requestClosedBox.classList.add("hidden"); els.submitRequestBtn.disabled=false; }
 function configLooksFilled(){ return firebaseConfig.apiKey!=="PASTE" && firebaseConfig.authDomain!=="PASTE" && firebaseConfig.projectId!=="PASTE" && firebaseConfig.appId!=="PASTE"; }
@@ -163,9 +163,29 @@ function renderTipLinks(){
   els.tipLinksWrap.innerHTML = "";
   if(!currentEvent) return;
   const links = [];
-  if(currentEvent.tipLinkVenmo) links.push(`<a class="tip-link" href="${currentEvent.tipLinkVenmo}" target="_blank" rel="noreferrer">Tip with Venmo</a>`);
-  if(currentEvent.tipLinkPaypal) links.push(`<a class="tip-link" href="${currentEvent.tipLinkPaypal}" target="_blank" rel="noreferrer">Tip with PayPal</a>`);
-  els.tipLinksWrap.innerHTML = links.join("");
+  if(currentEvent.tipLinkVenmo) links.push(`<a class="tip-link" href="${currentEvent.tipLinkVenmo}" target="_blank" rel="noreferrer">Venmo</a>`);
+  if(currentEvent.tipLinkPaypal) links.push(`<a class="tip-link" href="${currentEvent.tipLinkPaypal}" target="_blank" rel="noreferrer">PayPal</a>`);
+  if(links.length){
+    els.tipLinksWrap.innerHTML = links.join("");
+  } else {
+    els.tipLinksWrap.innerHTML = '<div class="helper">No tip links for this event.</div>';
+  }
+}
+
+function renderSocialLinks(){
+  if(!currentEvent) return;
+  const links = [];
+  if(currentEvent.instagram) links.push(`<a class="tip-link" href="${currentEvent.instagram}" target="_blank" rel="noreferrer">Instagram</a>`);
+  if(currentEvent.tiktok) links.push(`<a class="tip-link" href="${currentEvent.tiktok}" target="_blank" rel="noreferrer">TikTok</a>`);
+  if(currentEvent.facebook) links.push(`<a class="tip-link" href="${currentEvent.facebook}" target="_blank" rel="noreferrer">Facebook</a>`);
+  if(currentEvent.website) links.push(`<a class="tip-link" href="${currentEvent.website}" target="_blank" rel="noreferrer">Website</a>`);
+  if(links.length){
+    els.socialLinksWrap.innerHTML = links.join("");
+    els.socialLinksCard.classList.remove("hidden");
+  } else {
+    els.socialLinksWrap.innerHTML = "";
+    els.socialLinksCard.classList.add("hidden");
+  }
 }
 
 function renderEvent(e){
@@ -175,6 +195,7 @@ function renderEvent(e){
   els.reqEventMeta.textContent = `${e.venue||"Venue not set"} · ${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add event date/time"}`;
   els.emailFieldWrap.classList.toggle("hidden", e.emailRequired===false);
   renderTipLinks();
+  renderSocialLinks();
 
   const s = eventStatus(e);
   if(s==="upcoming") showClosed("Requests are closed right now. This event has not started yet.");
@@ -388,11 +409,6 @@ window.applySuggestion = applySuggestion;
 els.reqArtist.addEventListener("input", filterSuggestions);
 els.reqTrack.addEventListener("input", filterSuggestions);
 els.submitRequestBtn.addEventListener("click", submitRequest);
-els.tipButtons.forEach(btn => btn.addEventListener("click", () => {
-  selectedTip = Number(btn.dataset.tip||0);
-  syncTipButtons();
-}));
-
 syncTipButtons();
 if(initFirebase()) loadEvent();
 </script>
