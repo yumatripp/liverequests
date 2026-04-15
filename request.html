@@ -36,7 +36,7 @@
     .hidden{display:none!important}
     .primary-btn{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;padding:12px 14px;border-radius:12px;font-size:14px;background:var(--green);color:#08100b}
     .tip-links{display:flex;gap:10px;flex-wrap:wrap}
-    .tip-link{padding:10px 12px;border-radius:10px;border:1px solid #2c3345;background:#1a1f2a;color:#f3f5fb;text-decoration:none;font-size:13px}
+    .tip-link{padding:8px 10px;border-radius:999px;border:1px solid #2c3345;background:#1a1f2a;color:#f3f5fb;text-decoration:none;font-size:12px}
     @media (max-width:760px){.tip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phone-screen{min-height:auto}}
   </style>
 </head>
@@ -60,6 +60,7 @@
       <div id="requestResponseBox" class="info hidden"></div>
       <div id="queueStatusBox" class="success hidden"></div>
       <div id="requestSuccessBox" class="success hidden"></div>
+      <div id="requestDebugBox" class="warning hidden"></div>
 
       <div class="requester-card">
         <h3>Your info</h3>
@@ -143,6 +144,7 @@ const els = {
   requestResponseBox: document.getElementById("requestResponseBox"),
   queueStatusBox: document.getElementById("queueStatusBox"),
   requestSuccessBox: document.getElementById("requestSuccessBox"),
+  requestDebugBox: document.getElementById("requestDebugBox"),
   reqName: document.getElementById("reqName"),
   reqEmail: document.getElementById("reqEmail"),
   emailFieldWrap: document.getElementById("emailFieldWrap"),
@@ -165,6 +167,20 @@ function syncTipButtons(){}
 function showClosed(msg){ els.requestClosedBox.textContent=msg; els.requestClosedBox.classList.remove("hidden"); els.submitRequestBtn.disabled=true; }
 function hideClosed(){ els.requestClosedBox.classList.add("hidden"); els.submitRequestBtn.disabled=false; }
 function configLooksFilled(){ return firebaseConfig.apiKey!=="PASTE" && firebaseConfig.authDomain!=="PASTE" && firebaseConfig.projectId!=="PASTE" && firebaseConfig.appId!=="PASTE"; }
+
+
+function showRequestError(message){
+  els.requestDebugBox.textContent = message;
+  els.requestDebugBox.classList.remove("hidden");
+}
+function hideRequestError(){
+  els.requestDebugBox.classList.add("hidden");
+  els.requestDebugBox.textContent = "";
+}
+function showRequestSuccess(message){
+  els.requestSuccessBox.textContent = message;
+  els.requestSuccessBox.classList.remove("hidden");
+}
 
 function renderTipLinks(){
   els.tipLinksWrap.innerHTML = "";
@@ -230,9 +246,15 @@ function updateQueueStatus(){
   if(!req){ els.queueStatusBox.classList.add("hidden"); return; }
   els.queueStatusBox.textContent = "Your request was recieved.";
   els.queueStatusBox.classList.remove("hidden");
-  if(req.response){
-    els.requestResponseBox.textContent = "DJ Response: " + req.response;
+  const parts = [];
+  if(req.position) parts.push(`Queue position: #${req.position}`);
+  if(req.response) parts.push(`DJ Response: ${req.response}`);
+  if(parts.length){
+    els.requestResponseBox.textContent = parts.join(" · ");
     els.requestResponseBox.classList.remove("hidden");
+  } else {
+    els.requestResponseBox.classList.add("hidden");
+    els.requestResponseBox.textContent = "";
   }
 }
 
@@ -267,7 +289,8 @@ async function loadEvent(){
       els.reqEventMeta.textContent = "Ask the DJ for a new link.";
       return;
     }
-    renderEvent(doc.data());
+    hideRequestError();
+    renderEvent({ id: doc.id, ...doc.data() });
     listenQueue();
   }catch(err){
     console.error(err);
@@ -317,7 +340,11 @@ function validateRules(name, email, tipped){
 }
 
 async function submitRequest(){
-  if(!db || !currentEvent) return;
+  hideRequestError();
+  if(!db || !currentEvent){
+    showRequestError("No active event is loaded.");
+    return;
+  }
 
   const name = els.reqName.value.trim();
   const email = els.reqEmail.value.trim();
@@ -326,31 +353,35 @@ async function submitRequest(){
   const tipped = selectedTip > 0;
 
   if(!artist || !track){
-    alert("Please fill in artist and track title.");
+    showRequestError("Please fill in artist and track title.");
     return;
   }
 
   const error = validateRules(name, email, tipped);
   if(error){
-    alert(error);
+    showRequestError(error);
     return;
   }
 
   try{
+    console.log("Submitting request for event:", currentEvent?.id || eventId);
+
     const duplicateMatches = updateDuplicateMessage();
     const publicRef = db.collection("queue_public").doc();
     const privateRef = db.collection("requests_private").doc(publicRef.id);
     const lookup = (currentEvent.emailRequired!==false ? email.toLowerCase() : name.toLowerCase());
     const now = Date.now();
 
+    const activeCount = currentQueue.filter(q => (q.status||"new") !== "history").length;
+
     await publicRef.set({
-      eventId,
+      eventId: currentEvent.id || eventId,
       artist,
       track,
       tip: selectedTip,
       status: "new",
       isDuplicate: duplicateMatches.length > 0,
-      position: currentQueue.filter(q => (q.status||"new")!=="history").length + 1,
+      position: activeCount + 1,
       requesterKey: requesterId,
       response: "",
       limitOverride: false,
@@ -359,7 +390,7 @@ async function submitRequest(){
     });
 
     await privateRef.set({
-      eventId,
+      eventId: currentEvent.id || eventId,
       eventOwnerUid: currentEvent.ownerUid,
       name,
       email: currentEvent.emailRequired!==false ? email : "",
@@ -370,7 +401,7 @@ async function submitRequest(){
       tip: selectedTip,
       response: "",
       createdAt: now,
-      sortOrder: currentQueue.filter(q => (q.status||"new")!=="history").length,
+      sortOrder: activeCount,
       isDuplicate: duplicateMatches.length > 0,
       duplicateCount: duplicateMatches.length,
       returningRequester: false,
@@ -382,17 +413,22 @@ async function submitRequest(){
     lastPublicQueueId = publicRef.id;
     localStorage.setItem(responseKey(), lastPublicQueueId);
 
-    els.requestSuccessBox.classList.remove("hidden");
-    els.requestSuccessBox.textContent = `Request sent: ${artist} — ${track}${selectedTip ? ` · Tip $${selectedTip}` : ""}`;
+    showRequestSuccess(`Request sent: ${artist} — ${track}`);
     els.queueStatusBox.textContent = "Your request was recieved.";
     els.queueStatusBox.classList.remove("hidden");
+
+    // optimistic immediate queue position
+    const optimisticPosition = activeCount + 1;
+    els.requestResponseBox.textContent = `Queue position: #${optimisticPosition}`;
+    els.requestResponseBox.classList.remove("hidden");
+
     els.reqArtist.value = "";
     els.reqTrack.value = "";
     els.suggestionsBox.innerHTML = "";
     updateDuplicateMessage();
-  }catch(err){
-    console.error(err);
-    alert("Could not submit request. Check the Firebase values and Firestore rules.");
+  } catch(err){
+    console.error("Request submit failed:", err);
+    showRequestError("Request failed: " + (err && err.message ? err.message : "Unknown error"));
   }
 }
 
