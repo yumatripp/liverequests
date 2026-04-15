@@ -15,18 +15,17 @@
     .app{max-width:1380px;margin:0 auto;padding:18px}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
     .brand h1{margin:0;font-size:26px;line-height:1.05}
-    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
-    .view-toggle{display:flex;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:6px;border-radius:999px;flex-wrap:wrap}
-    .view-toggle button,.ghost-btn,.primary-btn,.danger-btn,.tiny-btn,select.action-select{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit}
-    .view-toggle button{padding:10px 16px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px}
-    .view-toggle button.active{background:var(--green);color:#07110b}
+    .tabs{display:flex;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:6px;border-radius:999px;flex-wrap:wrap}
+    .tabs button,.ghost-btn,.primary-btn,.danger-btn,.tiny-btn,select.action-select{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit}
+    .tabs button{padding:10px 16px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px}
+    .tabs button.active{background:var(--green);color:#07110b}
     .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
     .panel-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
     .panel-header h2{margin:0;font-size:18px}
-    .panel-header p{margin:4px 0 0;color:var(--muted);font-size:13px}
     .panel-body{padding:18px}
     .grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .time-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
     input,select{width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;padding:12px 13px;font-size:15px;outline:none}
     .checkbox-row{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;min-height:48px}
@@ -94,30 +93,26 @@
   <div class="topbar">
     <div class="brand">
       <h1>Live Requests</h1>
-      <p>DJ side with compact queue, drag reorder, and event deletion.</p>
-      <div id="accountEmail" style="margin-top:8px;color:#9ba3b7;font-size:12px"></div>
+      <div id="accountEmail" style="margin-top:6px;color:#9ba3b7;font-size:12px"></div>
     </div>
-    <div class="view-toggle">
-      <button id="showFullBtn" class="active" type="button">Full DJ View</button>
-      <button id="showQueueBtn" type="button">Requests Only</button>
-      <button id="loadLiveBtn" type="button">Load My Events</button>
+    <div class="tabs">
+      <button id="tabEventsBtn" class="active" type="button">Events</button>
+      <button id="tabProfileBtn" type="button">Profile</button>
+      <button id="tabQueueBtn" type="button">Requests Only</button>
       <button id="logoutBtn" type="button">Logout</button>
     </div>
   </div>
 
   <section class="panel">
     <div class="panel-header">
-      <div>
-        <h2>DJ / Event Side</h2>
-        <p>Create the event, generate the QR link, and manage the queue.</p>
-      </div>
+      <div><h2 id="sectionTitle">Event Editor</h2></div>
       <div class="row">
         <button class="ghost-btn" id="newEventBtn" type="button">Create New Event</button>
       </div>
     </div>
 
     <div class="panel-body split-stack">
-      <div id="djSetupSection">
+      <div id="eventsSection">
         <div class="event-banner" id="activeEventBanner">
           <div><h3>No event loaded</h3><div class="meta">Create or load one of your events to begin.</div></div>
           <span class="badge closed">No Event</span>
@@ -126,9 +121,10 @@
         <div class="grid-2">
           <div><label for="eventName">Event name</label><input id="eventName" placeholder="Friday Night Open Format" /></div>
           <div><label for="eventVenue">Location / venue</label><input id="eventVenue" placeholder="Club X" /></div>
-          <div><label for="eventDate">Date</label><input id="eventDate" type="date" /></div>
-          <div><label for="eventStart">Start time</label><input id="eventStart" type="time" /></div>
-          <div><label for="eventEnd">End time</label><input id="eventEnd" type="time" /></div>
+          <div><label for="startDate">Start date</label><input id="startDate" type="date" /></div>
+          <div><label>Start time</label><div class="time-row"><select id="startHour"></select><select id="startMinute"></select><select id="startAmpm"></select></div></div>
+          <div><label for="endDate">End date</label><input id="endDate" type="date" /></div>
+          <div><label>End time</label><div class="time-row"><select id="endHour"></select><select id="endMinute"></select><select id="endAmpm"></select></div></div>
           <div><label for="djName">DJ name</label><input id="djName" placeholder="DJ Tripp" /></div>
         </div>
 
@@ -181,7 +177,29 @@
         </div>
       </div>
 
-      <div id="djQueueSection">
+      <div id="profileSection" class="hidden">
+        <div class="settings-box" style="margin-top:0;">
+          <h3>Profile</h3>
+          <div class="grid-3">
+            <div><label for="defaultDjName">Default DJ name</label><input id="defaultDjName" placeholder="DJ Tripp" /></div>
+            <div><label for="defaultVenue">Default venue</label><input id="defaultVenue" placeholder="Your regular venue" /></div>
+            <div>
+              <label for="recentVenueSelect">Quick venue from history</label>
+              <div class="row">
+                <select id="recentVenueSelect"><option value="">No saved venues yet</option></select>
+                <button class="ghost-btn" id="applyRecentVenueBtn" type="button">Use Venue</button>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="ghost-btn" id="saveProfileBtn" type="button">Save Profile Defaults</button>
+            <button class="ghost-btn" id="useProfileDefaultsBtn" type="button">Use Defaults for New Event</button>
+          </div>
+          <div class="helper" style="margin-top:10px;">Your default DJ name auto-fills new events. Recent venues are learned from the events you save.</div>
+        </div>
+      </div>
+
+      <div id="queueSection" class="hidden">
         <div class="panel-header" style="padding:0 0 14px; border:none;">
           <div><h2>Live Queue</h2><p>Compact list view with drag reordering.</p></div>
           <div class="row"><span class="badge" id="requestCountBadge">0 Requests</span><span class="badge" id="notificationBadge">No New Requests</span></div>
@@ -218,10 +236,16 @@ const PRESET_RESPONSES = {
   theme: { label: "I'm sorry, this song doesn't fit the theme", overrideLimit: true }
 };
 
-let db=null, auth=null, currentUser=null, unsubscribeRequests=null, activeEventId=null, currentEventData=null, currentRequests=[], currentFilter="all", currentEventList=[], draggedRequestId=null;
+let db=null, auth=null, currentUser=null, unsubscribeRequests=null, activeEventId=null, currentEventData=null, currentRequests=[], currentFilter="all", currentEventList=[], draggedRequestId=null, userProfile={defaultDjName:"", defaultVenue:"", recentVenues:[]};
+
 const els = {
-  showFullBtn:document.getElementById("showFullBtn"), showQueueBtn:document.getElementById("showQueueBtn"), loadLiveBtn:document.getElementById("loadLiveBtn"), logoutBtn:document.getElementById("logoutBtn"), newEventBtn:document.getElementById("newEventBtn"),
-  djSetupSection:document.getElementById("djSetupSection"), eventName:document.getElementById("eventName"), eventVenue:document.getElementById("eventVenue"), eventDate:document.getElementById("eventDate"), eventStart:document.getElementById("eventStart"), eventEnd:document.getElementById("eventEnd"), djName:document.getElementById("djName"),
+  tabEventsBtn:document.getElementById("tabEventsBtn"), tabProfileBtn:document.getElementById("tabProfileBtn"), tabQueueBtn:document.getElementById("tabQueueBtn"),
+  eventsSection:document.getElementById("eventsSection"), profileSection:document.getElementById("profileSection"), queueSection:document.getElementById("queueSection"), sectionTitle:document.getElementById("sectionTitle"),
+  logoutBtn:document.getElementById("logoutBtn"), newEventBtn:document.getElementById("newEventBtn"),
+  eventName:document.getElementById("eventName"), eventVenue:document.getElementById("eventVenue"),
+  startDate:document.getElementById("startDate"), startHour:document.getElementById("startHour"), startMinute:document.getElementById("startMinute"), startAmpm:document.getElementById("startAmpm"),
+  endDate:document.getElementById("endDate"), endHour:document.getElementById("endHour"), endMinute:document.getElementById("endMinute"), endAmpm:document.getElementById("endAmpm"),
+  djName:document.getElementById("djName"), defaultDjName:document.getElementById("defaultDjName"), defaultVenue:document.getElementById("defaultVenue"), recentVenueSelect:document.getElementById("recentVenueSelect"), applyRecentVenueBtn:document.getElementById("applyRecentVenueBtn"), saveProfileBtn:document.getElementById("saveProfileBtn"), useProfileDefaultsBtn:document.getElementById("useProfileDefaultsBtn"),
   requestLimitMinutes:document.getElementById("requestLimitMinutes"), cutoffMinutes:document.getElementById("cutoffMinutes"), flagReturningRequesters:document.getElementById("flagReturningRequesters"), emailRequired:document.getElementById("emailRequired"), recurrenceMode:document.getElementById("recurrenceMode"), tipLinkVenmo:document.getElementById("tipLinkVenmo"), tipLinkPaypal:document.getElementById("tipLinkPaypal"),
   saveEventBtn:document.getElementById("saveEventBtn"), setLiveNowBtn:document.getElementById("setLiveNowBtn"), deleteEventBtn:document.getElementById("deleteEventBtn"),
   activeEventBanner:document.getElementById("activeEventBanner"), eventLink:document.getElementById("eventLink"), queueList:document.getElementById("queueList"), requestCountBadge:document.getElementById("requestCountBadge"), notificationBox:document.getElementById("notificationBox"), notificationBadge:document.getElementById("notificationBadge"), statusBox:document.getElementById("statusBox"), qrImage:document.getElementById("qrImage"), qrCaption:document.getElementById("qrCaption"), flyerQrImage:document.getElementById("flyerQrImage"), flyerTitle:document.getElementById("flyerTitle"), flyerMeta:document.getElementById("flyerMeta"), openFlyerBtn:document.getElementById("openFlyerBtn"), downloadQrBtn:document.getElementById("downloadQrBtn"), copyLinkBtn:document.getElementById("copyLinkBtn"), eventList:document.getElementById("eventList"), nowPlayingBox:document.getElementById("nowPlayingBox"), historyList:document.getElementById("historyList"), filterAllBtn:document.getElementById("filterAllBtn"), filterNewBtn:document.getElementById("filterNewBtn"), filterTippedBtn:document.getElementById("filterTippedBtn"), filterDuplicateBtn:document.getElementById("filterDuplicateBtn"), filterReturningBtn:document.getElementById("filterReturningBtn"), accountEmail:document.getElementById("accountEmail")
@@ -238,25 +262,130 @@ function getRequesterLink(){ if(!activeEventId) return ""; const u=new URL("requ
 function getQrUrl(){ const l=getRequesterLink(); return l ? `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=20&data=${encodeURIComponent(l)}` : ""; }
 function eventStatus(e){ if(!e||!e.startAt||!e.endAt) return "draft"; const now=Date.now(); if(now<e.startAt) return "upcoming"; if(now>e.endAt) return "ended"; return "live"; }
 
+function showTab(tab){
+  els.tabEventsBtn.classList.toggle("active", tab==="events");
+  els.tabProfileBtn.classList.toggle("active", tab==="profile");
+  els.tabQueueBtn.classList.toggle("active", tab==="queue");
+  els.eventsSection.classList.toggle("hidden", tab!=="events");
+  els.profileSection.classList.toggle("hidden", tab!=="profile");
+  els.queueSection.classList.toggle("hidden", tab!=="queue");
+  els.newEventBtn.classList.toggle("hidden", tab!=="events");
+  els.sectionTitle.textContent = tab==="events" ? "Event Editor" : tab==="profile" ? "Profile" : "Requests Only";
+}
+
+function populateTimeSelectors(){
+  const hours = Array.from({length:12}, (_,i)=>String(i+1));
+  const minutes = ["00","30"];
+  const ampm = ["AM","PM"];
+  [["startHour", hours],["endHour", hours],["startMinute", minutes],["endMinute", minutes],["startAmpm", ampm],["endAmpm", ampm]].forEach(([id, values]) => {
+    const el = els[id];
+    if(!el || el.options.length) return;
+    el.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join("");
+  });
+}
+function setTimeSelectors(prefix, time24){
+  const [hRaw,mRaw] = String(time24||"08:00").split(":");
+  let h = Number(hRaw||8);
+  const m = String(mRaw||"00");
+  const ampm = h >= 12 ? "PM" : "AM";
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  els[prefix + "Hour"].value = String(h12);
+  els[prefix + "Minute"].value = (m === "30" ? "30" : "00");
+  els[prefix + "Ampm"].value = ampm;
+}
+function getTimeFromSelectors(prefix){
+  let h = Number(els[prefix + "Hour"].value || "8");
+  const m = els[prefix + "Minute"].value || "00";
+  const ampm = els[prefix + "Ampm"].value || "AM";
+  if(ampm === "AM"){ if(h === 12) h = 0; } else { if(h !== 12) h += 12; }
+  return `${String(h).padStart(2,"0")}:${m}`;
+}
+function normalizeVenueHistory(list){
+  const seen = new Set();
+  return (list || []).map(v => String(v || "").trim()).filter(v => {
+    if(!v) return false;
+    const key = v.toLowerCase();
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 8);
+}
+function renderVenueHistory(){
+  const venues = normalizeVenueHistory(userProfile.recentVenues || []);
+  if(!venues.length){ els.recentVenueSelect.innerHTML = '<option value="">No saved venues yet</option>'; return; }
+  els.recentVenueSelect.innerHTML = '<option value="">Choose saved venue</option>' + venues.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+function applyProfileDefaultsToForm(){
+  if(userProfile.defaultDjName && !els.djName.value.trim()) els.djName.value = userProfile.defaultDjName;
+  if(userProfile.defaultVenue && !els.eventVenue.value.trim()) els.eventVenue.value = userProfile.defaultVenue;
+}
+async function loadUserProfile(){
+  if(!db || !currentUser) return;
+  try{
+    const doc = await db.collection("users").doc(currentUser.uid).get();
+    const data = doc.exists ? (doc.data() || {}) : {};
+    userProfile = { defaultDjName:data.defaultDjName||"", defaultVenue:data.defaultVenue||"", recentVenues:normalizeVenueHistory(data.recentVenues||[]) };
+    els.defaultDjName.value = userProfile.defaultDjName || "";
+    els.defaultVenue.value = userProfile.defaultVenue || "";
+    renderVenueHistory();
+    applyProfileDefaultsToForm();
+  }catch(err){ console.error(err); }
+}
+async function saveUserProfile(){
+  if(!db || !currentUser) return;
+  userProfile.defaultDjName = els.defaultDjName.value.trim();
+  userProfile.defaultVenue = els.defaultVenue.value.trim();
+  userProfile.recentVenues = normalizeVenueHistory(userProfile.recentVenues || []);
+  try{
+    await db.collection("users").doc(currentUser.uid).set({ defaultDjName:userProfile.defaultDjName, defaultVenue:userProfile.defaultVenue, recentVenues:userProfile.recentVenues }, { merge:true });
+    status("Profile defaults saved.", "success");
+    renderVenueHistory();
+  }catch(err){ console.error(err); status("Could not save profile defaults."); }
+}
+function useProfileDefaultsForNewEvent(){
+  if(userProfile.defaultDjName) els.djName.value = userProfile.defaultDjName;
+  if(userProfile.defaultVenue) els.eventVenue.value = userProfile.defaultVenue;
+}
+function updateVenueHistoryFromEvent(venue){
+  const trimmed = String(venue || "").trim();
+  if(!trimmed) return;
+  const merged = [trimmed, ...(userProfile.recentVenues || [])];
+  userProfile.recentVenues = normalizeVenueHistory(merged);
+  renderVenueHistory();
+}
+
 function blankEventForm(){
   activeEventId=null; currentEventData=null; currentRequests=[];
-  ["eventName","eventVenue","eventDate","eventStart","eventEnd","djName","tipLinkVenmo","tipLinkPaypal"].forEach(id=>els[id].value="");
+  ["eventName","eventVenue","startDate","endDate","djName","tipLinkVenmo","tipLinkPaypal"].forEach(id=>els[id].value="");
   els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.recurrenceMode.value="none";
   els.eventLink.value="Create an event first"; els.qrImage.removeAttribute("src"); els.flyerQrImage.removeAttribute("src");
   els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>';
   renderQueue([]); renderHistory([]); els.nowPlayingBox.textContent="Nothing marked as now playing yet.";
+  setTimeSelectors("start","08:00"); setTimeSelectors("end","11:00");
+  applyProfileDefaultsToForm();
 }
 
 function eventFromInputs(forceLive=false){
-  let date=els.eventDate.value, startTime=els.eventStart.value, endTime=els.eventEnd.value;
-  if(forceLive){ const now=new Date(); const start=new Date(now.getTime()-3600000); const end=new Date(now.getTime()+7200000); date=now.toISOString().slice(0,10); startTime=start.toTimeString().slice(0,5); endTime=end.toTimeString().slice(0,5);}
-  if(!els.eventName.value.trim()||!els.eventVenue.value.trim()||!date||!startTime||!endTime) return null;
-  return { name:els.eventName.value.trim(), venue:els.eventVenue.value.trim(), djName:els.djName.value.trim(), date, startTime, endTime, startAt:new Date(`${date}T${startTime}`).getTime(), endAt:new Date(`${date}T${endTime}`).getTime(), active:true, ownerUid:currentUser.uid, ownerEmail:currentUser.email||"", requestLimitMinutes:Number(els.requestLimitMinutes.value||0), cutoffMinutes:Number(els.cutoffMinutes.value||0), flagReturningRequesters:!!els.flagReturningRequesters.checked, emailRequired:!!els.emailRequired.checked, recurrenceMode:els.recurrenceMode.value, tipLinkVenmo:els.tipLinkVenmo.value.trim(), tipLinkPaypal:els.tipLinkPaypal.value.trim(), updatedAt:Date.now() };
+  let startDate=els.startDate.value, endDate=els.endDate.value;
+  let startTime=getTimeFromSelectors("start"), endTime=getTimeFromSelectors("end");
+  if(forceLive){
+    const now=new Date(); const start=new Date(now.getTime()-3600000); const end=new Date(now.getTime()+7200000);
+    startDate = start.toISOString().slice(0,10); endDate = end.toISOString().slice(0,10);
+    els.startDate.value = startDate; els.endDate.value = endDate;
+    setTimeSelectors("start", start.toTimeString().slice(0,5)); setTimeSelectors("end", end.toTimeString().slice(0,5));
+    startTime=getTimeFromSelectors("start"); endTime=getTimeFromSelectors("end");
+  }
+  if(!els.eventName.value.trim()||!els.eventVenue.value.trim()||!startDate||!endDate||!startTime||!endTime) return null;
+  const startAt=new Date(`${startDate}T${startTime}`).getTime(), endAt=new Date(`${endDate}T${endTime}`).getTime();
+  if(!(endAt > startAt)) return null;
+  return { name:els.eventName.value.trim(), venue:els.eventVenue.value.trim(), djName:els.djName.value.trim(), startDate, startTime, endDate, endTime, startAt, endAt, active:true, ownerUid:currentUser.uid, ownerEmail:currentUser.email||"", requestLimitMinutes:Number(els.requestLimitMinutes.value||0), cutoffMinutes:Number(els.cutoffMinutes.value||0), flagReturningRequesters:!!els.flagReturningRequesters.checked, emailRequired:!!els.emailRequired.checked, recurrenceMode:els.recurrenceMode.value, tipLinkVenmo:els.tipLinkVenmo.value.trim(), tipLinkPaypal:els.tipLinkPaypal.value.trim(), updatedAt:Date.now() };
 }
 
 function renderEvent(eventId,e){
   activeEventId=eventId; currentEventData=e;
-  els.eventName.value=e.name||""; els.eventVenue.value=e.venue||""; els.djName.value=e.djName||""; els.eventDate.value=e.date||""; els.eventStart.value=e.startTime||""; els.eventEnd.value=e.endTime||"";
+  els.eventName.value=e.name||""; els.eventVenue.value=e.venue||""; els.djName.value=e.djName||"";
+  els.startDate.value=e.startDate||""; els.endDate.value=e.endDate||"";
+  setTimeSelectors("start", e.startTime||"08:00"); setTimeSelectors("end", e.endTime||"11:00");
   els.requestLimitMinutes.value=String(e.requestLimitMinutes||0); els.cutoffMinutes.value=String(e.cutoffMinutes||0); els.flagReturningRequesters.checked=e.flagReturningRequesters!==false; els.emailRequired.checked=e.emailRequired!==false; els.recurrenceMode.value=e.recurrenceMode||"none"; els.tipLinkVenmo.value=e.tipLinkVenmo||""; els.tipLinkPaypal.value=e.tipLinkPaypal||"";
   const s=eventStatus(e); const badgeClass=s==="live"?"badge live":(s==="ended"?"badge closed":"badge"); const badgeText=s==="live"?"Live Now":(s==="ended"?"Ended":"Upcoming");
   const settings=[(e.requestLimitMinutes?`Limit: every ${e.requestLimitMinutes} min`:"Limit: none"), (e.cutoffMinutes?`Cutoff: ${e.cutoffMinutes} min before end`:"Cutoff: none"), (e.emailRequired!==false?"Email: required":"Email: optional")].join(" · ");
@@ -269,23 +398,8 @@ function renderEventList(){
   els.eventList.innerHTML=currentEventList.map(e=>`<div class="event-item"><div><strong>${esc(e.name||"Untitled Event")}</strong><div class="helper">${dt(e.startAt||0)} · ${esc(e.venue||"")}</div></div><div class="row"><button class="tiny-btn" onclick="loadEventById('${e.id}')" type="button">Load</button><button class="danger-btn" style="padding:6px 8px;font-size:11px;" onclick="deleteEventById('${e.id}')" type="button">Delete</button></div></div>`).join("");
 }
 
-function filterRequests(requests){
-  if(currentFilter==="new") return requests.filter(r=>(r.status||"new")==="new");
-  if(currentFilter==="tipped") return requests.filter(r=>Number(r.tip||0)>0);
-  if(currentFilter==="duplicate") return requests.filter(r=>r.isDuplicate);
-  if(currentFilter==="returning") return requests.filter(r=>r.returningRequester);
-  return requests;
-}
-
-function sortQueue(requests){
-  return [...requests].sort((a,b)=>{
-    const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1;
-    const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1;
-    const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip;
-    if((a.sortOrder??999999)!==(b.sortOrder??999999)) return (a.sortOrder??999999)-(b.sortOrder??999999);
-    return (a.createdAt??0)-(b.createdAt??0);
-  });
-}
+function filterRequests(requests){ if(currentFilter==="new") return requests.filter(r=>(r.status||"new")==="new"); if(currentFilter==="tipped") return requests.filter(r=>Number(r.tip||0)>0); if(currentFilter==="duplicate") return requests.filter(r=>r.isDuplicate); if(currentFilter==="returning") return requests.filter(r=>r.returningRequester); return requests; }
+function sortQueue(requests){ return [...requests].sort((a,b)=>{ const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1; const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1; const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip; if((a.sortOrder??999999)!==(b.sortOrder??999999)) return (a.sortOrder??999999)-(b.sortOrder??999999); return (a.createdAt??0)-(b.createdAt??0); }); }
 
 async function syncPublicQueue(){
   if(!db || !activeEventId) return;
@@ -298,56 +412,38 @@ async function syncPublicQueue(){
 }
 
 function setupDragAndDrop(){
-  const cards = Array.from(document.querySelectorAll(".request-card[draggable='true']"));
-  cards.forEach(card => {
-    card.addEventListener("dragstart", ()=>{ draggedRequestId = card.dataset.requestId; card.classList.add("dragging"); });
-    card.addEventListener("dragend", ()=>{ card.classList.remove("dragging"); cards.forEach(c=>c.classList.remove("drag-over")); });
-    card.addEventListener("dragover", e=>{ e.preventDefault(); if(card.dataset.requestId !== draggedRequestId) card.classList.add("drag-over"); });
-    card.addEventListener("dragleave", ()=>card.classList.remove("drag-over"));
-    card.addEventListener("drop", async e=>{
-      e.preventDefault();
-      card.classList.remove("drag-over");
-      const targetId = card.dataset.requestId;
-      if(!draggedRequestId || !targetId || draggedRequestId===targetId) return;
-      await reorderRequestsByDrag(draggedRequestId, targetId);
-    });
+  const cards=Array.from(document.querySelectorAll(".request-card[draggable='true']"));
+  cards.forEach(card=>{
+    card.addEventListener("dragstart",()=>{ draggedRequestId=card.dataset.requestId; card.classList.add("dragging"); });
+    card.addEventListener("dragend",()=>{ card.classList.remove("dragging"); cards.forEach(c=>c.classList.remove("drag-over")); });
+    card.addEventListener("dragover",e=>{ e.preventDefault(); if(card.dataset.requestId!==draggedRequestId) card.classList.add("drag-over"); });
+    card.addEventListener("dragleave",()=>card.classList.remove("drag-over"));
+    card.addEventListener("drop",async e=>{ e.preventDefault(); card.classList.remove("drag-over"); const targetId=card.dataset.requestId; if(!draggedRequestId||!targetId||draggedRequestId===targetId) return; await reorderRequestsByDrag(draggedRequestId,targetId); });
   });
 }
-
-async function reorderRequestsByDrag(dragId, targetId){
+async function reorderRequestsByDrag(dragId,targetId){
   if(!db) return;
   const active=sortQueue(currentRequests).filter(r=>(r.status||"new")!=="history");
   const from=active.findIndex(r=>r.id===dragId), to=active.findIndex(r=>r.id===targetId);
-  if(from<0 || to<0 || from===to) return;
+  if(from<0||to<0||from===to) return;
   const [item]=active.splice(from,1); active.splice(to,0,item);
-  const batch=db.batch(); active.forEach((req,i)=>batch.set(db.collection("requests_private").doc(req.id),{sortOrder:i},{merge:true}));
-  await batch.commit();
+  const batch=db.batch(); active.forEach((req,i)=>batch.set(db.collection("requests_private").doc(req.id),{sortOrder:i},{merge:true})); await batch.commit();
 }
 
 function renderQueue(requests){
   const visible=filterRequests(sortQueue(requests).filter(r=>(r.status||"new")!=="history"));
   const activeQueue=sortQueue(requests).filter(r=>(r.status||"new")!=="history");
   els.requestCountBadge.textContent=`${activeQueue.length} Requests`;
-  if(!visible.length){
-    els.queueList.innerHTML='<div class="empty">No requests in this view.</div>';
-  } else {
+  if(!visible.length){ els.queueList.innerHTML='<div class="empty">No requests in this view.</div>'; }
+  else{
     els.queueList.innerHTML=visible.map((req)=>{
       const overallIndex=activeQueue.findIndex(r=>r.id===req.id)+1;
       return `<div class="request-card" draggable="true" data-request-id="${req.id}">
         <div class="request-main">
           <div class="request-title">
-            <div class="request-line-1">
-              <strong>${esc(req.artist)}</strong>
-              <span style="color:#6f778b;">—</span>
-              <strong style="font-weight:600;color:#d5d9e6;">${esc(req.track)}</strong>
-            </div>
+            <div class="request-line-1"><strong>${esc(req.artist)}</strong><span style="color:#6f778b;">—</span><strong style="font-weight:600;color:#d5d9e6;">${esc(req.track)}</strong></div>
             <div class="request-line-2">${esc(req.name)}${req.email ? ` · ${esc(req.email)}` : ""} · ${(req.status||"new")==="now_playing" ? "Now Playing" : `#${overallIndex}`}</div>
-            <div class="request-line-3">
-              ${Number(req.tip||0)>0 ? `<span class="badge tip">Tip $${Number(req.tip||0)}</span>` : ``}
-              ${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}
-              ${req.returningRequester ? `<span class="badge repeat">Past requester</span>` : ``}
-              ${req.limitOverride ? `<span class="badge">Override</span>` : ``}
-            </div>
+            <div class="request-line-3">${Number(req.tip||0)>0 ? `<span class="badge tip">Tip $${Number(req.tip||0)}</span>` : ``}${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}${req.returningRequester ? `<span class="badge repeat">Past requester</span>` : ``}${req.limitOverride ? `<span class="badge">Override</span>` : ``}</div>
             ${req.response ? `<div class="card" style="padding:8px 10px;border-radius:10px;background:#101723;margin-top:4px;"><strong style="font-size:11px;color:#9bc5ff;">DJ Response</strong><div style="margin-top:2px;font-size:12px;">${esc(req.response)}</div></div>` : ""}
           </div>
           <div class="drag-handle" title="Drag to reorder">Drag</div>
@@ -383,29 +479,18 @@ function renderHistory(requests){
 
 async function deleteEventById(id){
   if(!db || !id) return;
-  const ok = confirm("Delete this event? This will also delete its requests and public queue items.");
+  const ok=confirm("Delete this event? This will also delete its requests and public queue items.");
   if(!ok) return;
   try{
-    const privateSnap = await db.collection("requests_private").where("eventId","==",id).get();
-    const publicSnap = await db.collection("queue_public").where("eventId","==",id).get();
-    const docsToDelete = [];
-    privateSnap.forEach(doc => docsToDelete.push({col:"requests_private", id:doc.id}));
-    publicSnap.forEach(doc => docsToDelete.push({col:"queue_public", id:doc.id}));
-    docsToDelete.push({col:"events", id});
-    while(docsToDelete.length){
-      const batch = db.batch();
-      docsToDelete.splice(0, 400).forEach(item => batch.delete(db.collection(item.col).doc(item.id)));
-      await batch.commit();
-    }
+    const privateSnap=await db.collection("requests_private").where("eventId","==",id).get();
+    const publicSnap=await db.collection("queue_public").where("eventId","==",id).get();
+    const docsToDelete=[]; privateSnap.forEach(doc=>docsToDelete.push({col:"requests_private",id:doc.id})); publicSnap.forEach(doc=>docsToDelete.push({col:"queue_public",id:doc.id})); docsToDelete.push({col:"events",id});
+    while(docsToDelete.length){ const batch=db.batch(); docsToDelete.splice(0,400).forEach(item=>batch.delete(db.collection(item.col).doc(item.id))); await batch.commit(); }
     if(activeEventId===id){ blankEventForm(); status("Event deleted.","success"); }
     await refreshEventList(false);
   }catch(err){ console.error(err); status("Could not delete the event."); }
 }
-
-async function deleteLoadedEvent(){
-  if(!activeEventId){ alert("Load an event first."); return; }
-  await deleteEventById(activeEventId);
-}
+async function deleteLoadedEvent(){ if(!activeEventId){ alert("Load an event first."); return; } await deleteEventById(activeEventId); }
 
 async function refreshEventList(selectNewest=false){
   if(!db || !currentUser) return;
@@ -414,26 +499,26 @@ async function refreshEventList(selectNewest=false){
   renderEventList();
   if(selectNewest && currentEventList.length) loadEventById(currentEventList[0].id);
 }
-
 async function loadActiveEvent(){ await refreshEventList(false); if(currentEventList.length) loadEventById(currentEventList[0].id); else status("No events found yet. Create one first."); }
 async function loadEventById(id){ if(!db) return; const doc=await db.collection("events").doc(id).get(); if(!doc.exists) return; renderEvent(doc.id, doc.data()); listenRequests(); status("Event loaded.","success"); }
 
 async function saveEvent(forceLive=false){
   if(!db || !currentUser) return;
   const data=eventFromInputs(forceLive);
-  if(!data){ status("Please fill in event name, venue, date, start time, and end time."); return; }
+  if(!data){ status("Please fill in event name, venue, start date/time, and end date/time. End must be after start."); return; }
   if(!activeEventId) activeEventId="event_"+Date.now();
   await db.collection("events").doc(activeEventId).set(data,{merge:true});
   const recur=data.recurrenceMode||"none";
   if(recur!=="none"){
     const total=Number(recur.split("_")[1]||0);
     for(let i=2;i<=total;i++){
-      const start=new Date(data.startAt+(i-1)*7*24*60*60*1000);
-      const end=new Date(data.endAt+(i-1)*7*24*60*60*1000);
+      const start=new Date(data.startAt+(i-1)*7*24*60*60*1000), end=new Date(data.endAt+(i-1)*7*24*60*60*1000);
       const recurId=`${activeEventId}_r${i}`;
-      await db.collection("events").doc(recurId).set({...data,date:start.toISOString().slice(0,10),startTime:start.toTimeString().slice(0,5),endTime:end.toTimeString().slice(0,5),startAt:start.getTime(),endAt:end.getTime(),recurrenceMode:"none",recurringParentId:activeEventId},{merge:true});
+      await db.collection("events").doc(recurId).set({...data,startDate:start.toISOString().slice(0,10),startTime:start.toTimeString().slice(0,5),endDate:end.toISOString().slice(0,10),endTime:end.toTimeString().slice(0,5),startAt:start.getTime(),endAt:end.getTime(),recurrenceMode:"none",recurringParentId:activeEventId},{merge:true});
     }
   }
+  updateVenueHistoryFromEvent(data.venue);
+  await db.collection("users").doc(currentUser.uid).set({ recentVenues:userProfile.recentVenues }, { merge:true });
   renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status("Event saved live.","success");
 }
 
@@ -481,7 +566,6 @@ function openFlyerView(){
   const flyerHtml=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${esc(name)} QR Flyer</title><style>body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}.card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}.eyebrow{font-size:18px;font-weight:800;letter-spacing:.12em;color:#555;margin-bottom:8px}.title{font-size:42px;font-weight:900;line-height:1.05;margin-bottom:10px}.meta{font-size:20px;color:#444;margin-bottom:26px;line-height:1.45}img{width:min(420px,86vw);height:auto}.footer{margin-top:20px;font-size:20px;font-weight:700}.link{margin-top:12px;font-size:12px;color:#666;word-break:break-all}</style></head><body><div class="card"><div class="eyebrow">LIVE REQUESTS</div><div class="title">${esc(name)}</div><div class="meta">${esc(venue)}</div><img src="${qr}" alt="QR code" /><div class="footer">Open your camera and scan</div><div class="link">${esc(getRequesterLink())}</div></div></body></html>`;
   const win=window.open("", "_blank"); if(!win) return; win.document.open(); win.document.write(flyerHtml); win.document.close();
 }
-function setView(mode){ els.showFullBtn.classList.toggle("active",mode==="full"); els.showQueueBtn.classList.toggle("active",mode==="queue"); els.djSetupSection.classList.toggle("hidden",mode==="queue"); }
 
 function initFirebase(){
   if(!configLooksFilled()){ status("Paste your Firebase values into dj.html first."); return false; }
@@ -492,6 +576,7 @@ function initFirebase(){
       if(!user.emailVerified){ await auth.signOut(); window.location.href="login.html"; return; }
       currentUser=user; els.accountEmail.textContent=`Signed in as ${user.email||""}`;
       await db.collection("users").doc(user.uid).set({ email:user.email||"", emailVerified:user.emailVerified, lastLoginAt:Date.now() }, {merge:true});
+      await loadUserProfile();
       await loadActiveEvent();
     });
     return true;
@@ -499,12 +584,34 @@ function initFirebase(){
 }
 
 window.loadEventById=loadEventById; window.deleteEventById=deleteEventById; window.moveRequest=moveRequest; window.deleteRequest=deleteRequest; window.markNowPlaying=markNowPlaying; window.moveToHistory=moveToHistory; window.presetRespond=presetRespond;
-els.saveEventBtn.addEventListener("click",()=>saveEvent(false)); els.setLiveNowBtn.addEventListener("click",()=>saveEvent(true)); els.deleteEventBtn.addEventListener("click",deleteLoadedEvent);
-els.showFullBtn.addEventListener("click",()=>setView("full")); els.showQueueBtn.addEventListener("click",()=>setView("queue")); els.copyLinkBtn.addEventListener("click",copyLink); els.downloadQrBtn.addEventListener("click",openQrImage); els.openFlyerBtn.addEventListener("click",openFlyerView);
-els.loadLiveBtn.addEventListener("click",loadActiveEvent); els.newEventBtn.addEventListener("click",blankEventForm); els.logoutBtn.addEventListener("click",async()=>{ if(auth){ await auth.signOut(); window.location.href="login.html"; } });
-els.filterAllBtn.addEventListener("click",()=>{ currentFilter="all"; renderQueue(currentRequests); }); els.filterNewBtn.addEventListener("click",()=>{ currentFilter="new"; renderQueue(currentRequests); }); els.filterTippedBtn.addEventListener("click",()=>{ currentFilter="tipped"; renderQueue(currentRequests); }); els.filterDuplicateBtn.addEventListener("click",()=>{ currentFilter="duplicate"; renderQueue(currentRequests); }); els.filterReturningBtn.addEventListener("click",()=>{ currentFilter="returning"; renderQueue(currentRequests); });
 
-blankEventForm(); setView("full"); initFirebase();
+els.tabEventsBtn.addEventListener("click",()=>showTab("events"));
+els.tabProfileBtn.addEventListener("click",()=>showTab("profile"));
+els.tabQueueBtn.addEventListener("click",()=>showTab("queue"));
+els.logoutBtn.addEventListener("click",async()=>{ if(auth){ await auth.signOut(); window.location.href="login.html"; } });
+
+els.saveEventBtn.addEventListener("click",()=>saveEvent(false));
+els.setLiveNowBtn.addEventListener("click",()=>saveEvent(true));
+els.deleteEventBtn.addEventListener("click",deleteLoadedEvent);
+els.copyLinkBtn.addEventListener("click",copyLink);
+els.downloadQrBtn.addEventListener("click",openQrImage);
+els.openFlyerBtn.addEventListener("click",openFlyerView);
+els.newEventBtn.addEventListener("click",blankEventForm);
+
+els.filterAllBtn.addEventListener("click",()=>{ currentFilter="all"; renderQueue(currentRequests); });
+els.filterNewBtn.addEventListener("click",()=>{ currentFilter="new"; renderQueue(currentRequests); });
+els.filterTippedBtn.addEventListener("click",()=>{ currentFilter="tipped"; renderQueue(currentRequests); });
+els.filterDuplicateBtn.addEventListener("click",()=>{ currentFilter="duplicate"; renderQueue(currentRequests); });
+els.filterReturningBtn.addEventListener("click",()=>{ currentFilter="returning"; renderQueue(currentRequests); });
+
+els.saveProfileBtn.addEventListener("click", saveUserProfile);
+els.useProfileDefaultsBtn.addEventListener("click", useProfileDefaultsForNewEvent);
+els.applyRecentVenueBtn.addEventListener("click", ()=>{ if(els.recentVenueSelect.value) els.eventVenue.value = els.recentVenueSelect.value; });
+
+populateTimeSelectors();
+blankEventForm();
+showTab("events");
+initFirebase();
 </script>
 </body>
 </html>
