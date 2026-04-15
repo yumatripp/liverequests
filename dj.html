@@ -135,6 +135,8 @@
             <div><label for="cutoffMinutes">Request cutoff before show ends</label><select id="cutoffMinutes"><option value="0">No cutoff</option><option value="30">30 minutes before end</option><option value="60">1 hour before end</option></select></div>
             <div><label>Returning requester alerts</label><div class="checkbox-row"><input id="flagReturningRequesters" type="checkbox" checked /><span>Notify if requester has requested at past events</span></div></div>
             <div><label>Email required</label><div class="checkbox-row"><input id="emailRequired" type="checkbox" checked /><span>Require email on requester page</span></div></div>
+            <div><label>Include tip links</label><div class="checkbox-row"><input id="includeTipsInEvent" type="checkbox" checked /><span>Show Venmo / PayPal on requester page</span></div></div>
+            <div><label>Include socials</label><div class="checkbox-row"><input id="includeSocialsInEvent" type="checkbox" checked /><span>Show social links on requester page</span></div></div>
             <div><label for="recurrenceMode">Recurrence</label><select id="recurrenceMode"><option value="none">One-time event</option><option value="weekly_2">Weekly, 2 total events</option><option value="weekly_4">Weekly, 4 total events</option><option value="weekly_8">Weekly, 8 total events</option></select></div>
 </div>
         </div>
@@ -458,7 +460,7 @@ function updateVenueHistoryFromEvent(venue){
 function blankEventForm(){
   activeEventId=null; currentEventData=null; currentRequests=[];
   ["eventName","eventVenue","startDate","endDate","djName","tipLinkVenmo","tipLinkPaypal"].forEach(id=>els[id].value="");
-  els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.recurrenceMode.value="none";
+  els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.includeTipsInEvent.checked=true; els.includeSocialsInEvent.checked=true; els.recurrenceMode.value="none";
   els.eventLink.value="Create an event first"; els.qrImage.removeAttribute("src"); els.flyerQrImage.removeAttribute("src");
   els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>';
   renderQueue([]); renderHistory([]); els.nowPlayingBox.textContent="Nothing marked as now playing yet.";
@@ -607,6 +609,7 @@ async function saveEvent(forceLive=false){
   if(!db || !currentUser) return;
   const data=eventFromInputs(forceLive);
   if(!data){ status("Please fill in event name, venue, start date/time, and end date/time. End must be after start."); return; }
+  const isNewEvent = !activeEventId;
   if(!activeEventId) activeEventId="event_"+Date.now();
   await db.collection("events").doc(activeEventId).set(data,{merge:true});
   const recur=data.recurrenceMode||"none";
@@ -620,7 +623,7 @@ async function saveEvent(forceLive=false){
   }
   updateVenueHistoryFromEvent(data.venue);
   await db.collection("users").doc(currentUser.uid).set({ recentVenues:userProfile.recentVenues }, { merge:true });
-  renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status("Event saved live.","success");
+  renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status(isNewEvent ? "Event created successfully." : "Event updated successfully.","success");
 }
 
 function listenRequests(){
@@ -637,6 +640,7 @@ function listenRequests(){
       if(latest.isDuplicate) msg += " · duplicate request";
       if(Number(latest.tip||0)>0) msg += ` · tipped $${Number(latest.tip||0)}`;
       note(msg);
+      pushBrowserNotification(msg);
     } else hideNote();
   });
 }
@@ -668,6 +672,26 @@ function openFlyerView(){
   const win=window.open("", "_blank"); if(!win) return; win.document.open(); win.document.write(flyerHtml); win.document.close();
 }
 
+
+async function ensureNotificationPermission(){
+  if(!("Notification" in window)) return "unsupported";
+  if(Notification.permission === "granted") return "granted";
+  if(Notification.permission === "denied") return "denied";
+  try {
+    return await Notification.requestPermission();
+  } catch (e) {
+    return "default";
+  }
+}
+
+function pushBrowserNotification(message){
+  if(!("Notification" in window)) return;
+  if(Notification.permission !== "granted") return;
+  try{
+    new Notification("Live Requests", { body: message });
+  } catch(e){}
+}
+
 function initFirebase(){
   if(!configLooksFilled()){ status("Paste your Firebase values into dj.html first."); return false; }
   try{
@@ -678,6 +702,7 @@ function initFirebase(){
       currentUser=user; els.accountEmail.textContent=`Signed in as ${user.email||""}`;
       await db.collection("users").doc(user.uid).set({ email:user.email||"", emailVerified:user.emailVerified, lastLoginAt:Date.now() }, {merge:true});
       await loadUserProfile();
+      await ensureNotificationPermission();
       await loadActiveEvent();
     });
     return true;
