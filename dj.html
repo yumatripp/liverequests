@@ -275,7 +275,7 @@ const els = {
   startDate:document.getElementById("startDate"), startHour:document.getElementById("startHour"), startMinute:document.getElementById("startMinute"), startAmpm:document.getElementById("startAmpm"),
   endDate:document.getElementById("endDate"), endHour:document.getElementById("endHour"), endMinute:document.getElementById("endMinute"), endAmpm:document.getElementById("endAmpm"),
   djName:document.getElementById("djName"), defaultDjName:document.getElementById("defaultDjName"), defaultVenue:document.getElementById("defaultVenue"), recentVenueSelect:document.getElementById("recentVenueSelect"), applyRecentVenueBtn:document.getElementById("applyRecentVenueBtn"), saveProfileBtn:document.getElementById("saveProfileBtn"), useProfileDefaultsBtn:document.getElementById("useProfileDefaultsBtn"), profileTipVenmo:document.getElementById("profileTipVenmo"), profileTipPaypal:document.getElementById("profileTipPaypal"), profileInstagram:document.getElementById("profileInstagram"), profileTiktok:document.getElementById("profileTiktok"), profileFacebook:document.getElementById("profileFacebook"), profileWebsite:document.getElementById("profileWebsite"),
-  requestLimitMinutes:document.getElementById("requestLimitMinutes"), cutoffMinutes:document.getElementById("cutoffMinutes"), flagReturningRequesters:document.getElementById("flagReturningRequesters"), emailRequired:document.getElementById("emailRequired"), recurrenceMode:document.getElementById("recurrenceMode"), tipLinkVenmo:document.getElementById("tipLinkVenmo"), tipLinkPaypal:document.getElementById("tipLinkPaypal"),
+  requestLimitMinutes:document.getElementById("requestLimitMinutes"), cutoffMinutes:document.getElementById("cutoffMinutes"), flagReturningRequesters:document.getElementById("flagReturningRequesters"), emailRequired:document.getElementById("emailRequired"), includeTipsInEvent:document.getElementById("includeTipsInEvent"), includeSocialsInEvent:document.getElementById("includeSocialsInEvent"), recurrenceMode:document.getElementById("recurrenceMode"), tipLinkVenmo:document.getElementById("tipLinkVenmo"), tipLinkPaypal:document.getElementById("tipLinkPaypal"), eventInstagram:document.getElementById("eventInstagram"), eventTiktok:document.getElementById("eventTiktok"), eventFacebook:document.getElementById("eventFacebook"), eventWebsite:document.getElementById("eventWebsite"),
   saveEventBtn:document.getElementById("saveEventBtn"), setLiveNowBtn:document.getElementById("setLiveNowBtn"), deleteEventBtn:document.getElementById("deleteEventBtn"),
   activeEventBanner:document.getElementById("activeEventBanner"), eventLink:document.getElementById("eventLink"), queueList:document.getElementById("queueList"), requestCountBadge:document.getElementById("requestCountBadge"), notificationBox:document.getElementById("notificationBox"), notificationBadge:document.getElementById("notificationBadge"), statusBox:document.getElementById("statusBox"), qrImage:document.getElementById("qrImage"), qrCaption:document.getElementById("qrCaption"), flyerQrImage:document.getElementById("flyerQrImage"), flyerTitle:document.getElementById("flyerTitle"), flyerMeta:document.getElementById("flyerMeta"), openFlyerBtn:document.getElementById("openFlyerBtn"), downloadQrBtn:document.getElementById("downloadQrBtn"), copyLinkBtn:document.getElementById("copyLinkBtn"), eventList:document.getElementById("eventList"), nowPlayingBox:document.getElementById("nowPlayingBox"), historyList:document.getElementById("historyList"), filterAllBtn:document.getElementById("filterAllBtn"), filterNewBtn:document.getElementById("filterNewBtn"), filterTippedBtn:document.getElementById("filterTippedBtn"), filterDuplicateBtn:document.getElementById("filterDuplicateBtn"), filterReturningBtn:document.getElementById("filterReturningBtn"), accountEmail:document.getElementById("accountEmail")
 };
@@ -384,21 +384,21 @@ function applyProfileDefaultsToForm(){
   if(userProfile.facebook && !els.eventFacebook.value.trim()) els.eventFacebook.value = facebookUrl(userProfile.facebook);
   if(userProfile.website && !els.eventWebsite.value.trim()) els.eventWebsite.value = userProfile.website.trim();
 }
-async function loadUserProfile(){
+async async function loadUserProfile(){
   if(!db || !currentUser) return;
   try{
     const doc = await db.collection("users").doc(currentUser.uid).get();
     const data = doc.exists ? (doc.data() || {}) : {};
     userProfile = {
-      defaultDjName:data.defaultDjName||"",
-      defaultVenue:data.defaultVenue||"",
-      recentVenues:normalizeVenueHistory(data.recentVenues||[]),
-      tipVenmo:data.tipVenmo||"",
-      tipPaypal:data.tipPaypal||"",
-      instagram:data.instagram||"",
-      tiktok:data.tiktok||"",
-      facebook:data.facebook||"",
-      website:data.website||""
+      defaultDjName:data.defaultDjName || "",
+      defaultVenue:data.defaultVenue || "",
+      recentVenues:normalizeVenueHistory(data.recentVenues || []),
+      tipVenmo:data.tipVenmo || sanitizeHandle(data.tipLinkVenmo || ""),
+      tipPaypal:data.tipPaypal || sanitizeHandle(data.tipLinkPaypal || ""),
+      instagram:data.instagram || sanitizeHandle(data.instagramUrl || ""),
+      tiktok:data.tiktok || sanitizeHandle(data.tiktokUrl || ""),
+      facebook:data.facebook || sanitizeHandle(data.facebookUrl || ""),
+      website:data.website || data.websiteUrl || ""
     };
     els.defaultDjName.value = userProfile.defaultDjName || "";
     els.defaultVenue.value = userProfile.defaultVenue || "";
@@ -412,7 +412,7 @@ async function loadUserProfile(){
     applyProfileDefaultsToForm();
   }catch(err){ console.error(err); }
 }
-async function saveUserProfile(){
+async async function saveUserProfile(){
   if(!db || !currentUser) return;
   userProfile.defaultDjName = els.defaultDjName.value.trim();
   userProfile.defaultVenue = els.defaultVenue.value.trim();
@@ -433,7 +433,13 @@ async function saveUserProfile(){
       instagram:userProfile.instagram,
       tiktok:userProfile.tiktok,
       facebook:userProfile.facebook,
-      website:userProfile.website
+      website:userProfile.website,
+      tipLinkVenmo:venmoUrl(userProfile.tipVenmo),
+      tipLinkPaypal:paypalUrl(userProfile.tipPaypal),
+      instagramUrl:instagramUrl(userProfile.instagram),
+      tiktokUrl:tiktokUrl(userProfile.tiktok),
+      facebookUrl:facebookUrl(userProfile.facebook),
+      websiteUrl:userProfile.website
     }, { merge:true });
     status("Profile defaults saved.", "success");
     renderVenueHistory();
@@ -448,6 +454,7 @@ function useProfileDefaultsForNewEvent(){
   if(userProfile.tiktok) els.eventTiktok.value = tiktokUrl(userProfile.tiktok);
   if(userProfile.facebook) els.eventFacebook.value = facebookUrl(userProfile.facebook);
   if(userProfile.website) els.eventWebsite.value = userProfile.website.trim();
+  status("Profile defaults applied to the event.", "success");
 }
 function updateVenueHistoryFromEvent(venue){
   const trimmed = String(venue || "").trim();
@@ -459,7 +466,7 @@ function updateVenueHistoryFromEvent(venue){
 
 function blankEventForm(){
   activeEventId=null; currentEventData=null; currentRequests=[];
-  ["eventName","eventVenue","startDate","endDate","djName","tipLinkVenmo","tipLinkPaypal"].forEach(id=>els[id].value="");
+  ["eventName","eventVenue","startDate","endDate","djName","tipLinkVenmo","tipLinkPaypal","eventInstagram","eventTiktok","eventFacebook","eventWebsite"].forEach(id=>els[id].value="");
   els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.includeTipsInEvent.checked=true; els.includeSocialsInEvent.checked=true; els.recurrenceMode.value="none";
   els.eventLink.value="Create an event first"; els.qrImage.removeAttribute("src"); els.flyerQrImage.removeAttribute("src");
   els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>';
@@ -481,7 +488,29 @@ function eventFromInputs(forceLive=false){
   if(!els.eventName.value.trim()||!els.eventVenue.value.trim()||!startDate||!endDate||!startTime||!endTime) return null;
   const startAt=new Date(`${startDate}T${startTime}`).getTime(), endAt=new Date(`${endDate}T${endTime}`).getTime();
   if(!(endAt > startAt)) return null;
-  return { name:els.eventName.value.trim(), venue:els.eventVenue.value.trim(), djName:els.djName.value.trim(), startDate, startTime, endDate, endTime, startAt, endAt, active:true, ownerUid:currentUser.uid, ownerEmail:currentUser.email||"", requestLimitMinutes:Number(els.requestLimitMinutes.value||0), cutoffMinutes:Number(els.cutoffMinutes.value||0), flagReturningRequesters:!!els.flagReturningRequesters.checked, emailRequired:!!els.emailRequired.checked, recurrenceMode:els.recurrenceMode.value, tipLinkVenmo:els.tipLinkVenmo.value.trim(), tipLinkPaypal:els.tipLinkPaypal.value.trim(), updatedAt:Date.now() };
+  return {
+    name:els.eventName.value.trim(),
+    venue:els.eventVenue.value.trim(),
+    djName:els.djName.value.trim(),
+    startDate, startTime, endDate, endTime, startAt, endAt,
+    active:true,
+    ownerUid:currentUser.uid,
+    ownerEmail:currentUser.email||"",
+    requestLimitMinutes:Number(els.requestLimitMinutes.value||0),
+    cutoffMinutes:Number(els.cutoffMinutes.value||0),
+    flagReturningRequesters:!!els.flagReturningRequesters.checked,
+    emailRequired:!!els.emailRequired.checked,
+    includeTipsInEvent:!!els.includeTipsInEvent.checked,
+    includeSocialsInEvent:!!els.includeSocialsInEvent.checked,
+    recurrenceMode:els.recurrenceMode.value,
+    tipLinkVenmo:els.includeTipsInEvent.checked ? els.tipLinkVenmo.value.trim() : "",
+    tipLinkPaypal:els.includeTipsInEvent.checked ? els.tipLinkPaypal.value.trim() : "",
+    instagram:els.includeSocialsInEvent.checked ? els.eventInstagram.value.trim() : "",
+    tiktok:els.includeSocialsInEvent.checked ? els.eventTiktok.value.trim() : "",
+    facebook:els.includeSocialsInEvent.checked ? els.eventFacebook.value.trim() : "",
+    website:els.includeSocialsInEvent.checked ? els.eventWebsite.value.trim() : "",
+    updatedAt:Date.now()
+  };
 }
 
 function renderEvent(eventId,e){
@@ -489,7 +518,7 @@ function renderEvent(eventId,e){
   els.eventName.value=e.name||""; els.eventVenue.value=e.venue||""; els.djName.value=e.djName||"";
   els.startDate.value=e.startDate||""; els.endDate.value=e.endDate||"";
   setTimeSelectors("start", e.startTime||"08:00"); setTimeSelectors("end", e.endTime||"11:00");
-  els.requestLimitMinutes.value=String(e.requestLimitMinutes||0); els.cutoffMinutes.value=String(e.cutoffMinutes||0); els.flagReturningRequesters.checked=e.flagReturningRequesters!==false; els.emailRequired.checked=e.emailRequired!==false; els.recurrenceMode.value=e.recurrenceMode||"none"; els.tipLinkVenmo.value=e.tipLinkVenmo||""; els.tipLinkPaypal.value=e.tipLinkPaypal||"";
+  els.requestLimitMinutes.value=String(e.requestLimitMinutes||0); els.cutoffMinutes.value=String(e.cutoffMinutes||0); els.flagReturningRequesters.checked=e.flagReturningRequesters!==false; els.emailRequired.checked=e.emailRequired!==false; els.includeTipsInEvent.checked=e.includeTipsInEvent!==false; els.includeSocialsInEvent.checked=e.includeSocialsInEvent!==false; els.recurrenceMode.value=e.recurrenceMode||"none"; els.tipLinkVenmo.value=e.tipLinkVenmo||""; els.tipLinkPaypal.value=e.tipLinkPaypal||""; els.eventInstagram.value=e.instagram||""; els.eventTiktok.value=e.tiktok||""; els.eventFacebook.value=e.facebook||""; els.eventWebsite.value=e.website||"";
   const s=eventStatus(e); const badgeClass=s==="live"?"badge live":(s==="ended"?"badge closed":"badge"); const badgeText=s==="live"?"Live Now":(s==="ended"?"Ended":"Upcoming");
   const settings=[(e.requestLimitMinutes?`Limit: every ${e.requestLimitMinutes} min`:"Limit: none"), (e.cutoffMinutes?`Cutoff: ${e.cutoffMinutes} min before end`:"Cutoff: none"), (e.emailRequired!==false?"Email: required":"Email: optional")].join(" · ");
   els.activeEventBanner.innerHTML=`<div><h3>${esc(e.name||"Untitled Event")}</h3><div class="meta">${esc(e.venue||"No venue")}<br>DJ: ${esc(e.djName||"Not set")}<br>${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add date/time"}<br>${esc(settings)}</div></div><span class="${badgeClass}">${badgeText}</span>`;
@@ -623,7 +652,7 @@ async function saveEvent(forceLive=false){
   }
   updateVenueHistoryFromEvent(data.venue);
   await db.collection("users").doc(currentUser.uid).set({ recentVenues:userProfile.recentVenues }, { merge:true });
-  renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status(isNewEvent ? "Event created successfully." : "Event updated successfully.","success");
+  renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status(isNewEvent ? "Event created successfully." : "Event updated successfully.", "success");
 }
 
 function listenRequests(){

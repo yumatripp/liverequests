@@ -203,7 +203,6 @@ function renderEvent(e){
   els.emailFieldWrap.classList.toggle("hidden", e.emailRequired===false);
   renderTipLinks();
   renderSocialLinks();
-  renderSocialLinks();
 
   const s = eventStatus(e);
   if(s==="upcoming") showClosed("Requests are closed right now. This event has not started yet.");
