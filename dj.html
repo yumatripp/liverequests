@@ -678,23 +678,49 @@ async function saveEvent(forceLive=false){
   renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status(isNewEvent ? "Event created successfully." : "Event updated successfully.", "success");
 }
 
+let notificationsPrimed = false;
+let seenRequestIds = new Set();
+
 function listenRequests(){
   if(!db || !activeEventId) return;
   if(unsubscribeRequests) unsubscribeRequests();
-  unsubscribeRequests=db.collection("requests_private").where("eventId","==",activeEventId).onSnapshot(async snapshot=>{
-    const adds=snapshot.docChanges().filter(c=>c.type==="added");
-    currentRequests=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-    renderQueue(currentRequests); renderHistory(currentRequests); await syncPublicQueue();
-    if(adds.length){
-      const latest=adds[adds.length-1].doc.data();
-      let msg=`New request: ${latest.artist} — ${latest.track} from ${latest.name}`;
-      if(currentEventData?.flagReturningRequesters && latest.returningRequester) msg += ` · returning requester (${latest.returningRequesterCount||1} past requests)`;
-      if(latest.isDuplicate) msg += " · duplicate request";
-      if(Number(latest.tip||0)>0) msg += ` · tipped $${Number(latest.tip||0)}`;
-      note(msg);
-      pushBrowserNotification(msg);
-    } else hideNote();
-  });
+
+  notificationsPrimed = false;
+  seenRequestIds = new Set();
+
+  unsubscribeRequests = db.collection("requests_private")
+    .where("eventId","==",activeEventId)
+    .onSnapshot(async snapshot => {
+      const docs = snapshot.docs.map(doc => ({id:doc.id, ...doc.data()}));
+      currentRequests = docs;
+      renderQueue(currentRequests);
+      renderHistory(currentRequests);
+      await syncPublicQueue();
+
+      const currentIds = new Set(snapshot.docs.map(doc => doc.id));
+
+      snapshot.docChanges().forEach(change => {
+        if(change.type === "added"){
+          const data = change.doc.data();
+          const id = change.doc.id;
+
+          if(notificationsPrimed && !seenRequestIds.has(id)){
+            let msg = `${data.artist} — ${data.track}`;
+            if(Number(data.tip||0) > 0) msg += ` (tipped $${Number(data.tip||0)})`;
+            note(`New request: ${msg}`);
+            pushBrowserNotification(msg);
+            console.log("New request:", msg);
+          }
+        }
+      });
+
+      seenRequestIds = currentIds;
+      notificationsPrimed = true;
+
+      if(!snapshot.docChanges().some(change => change.type === "added")){
+        hideNote();
+      }
+    });
 }
 
 async function moveRequest(id,direction){
@@ -726,12 +752,24 @@ function openFlyerView(){
 
 
 async function ensureNotificationPermission(){
-  if(!("Notification" in window)) return "unsupported";
-  if(Notification.permission === "granted") return "granted";
-  if(Notification.permission === "denied") return "denied";
-  try {
-    return await Notification.requestPermission();
-  } catch (e) {
+  if(!("Notification" in window)){
+    console.log("Notifications not supported");
+    return "unsupported";
+  }
+  if(Notification.permission === "granted"){
+    console.log("Notifications already granted");
+    return "granted";
+  }
+  if(Notification.permission === "denied"){
+    console.log("Notifications denied");
+    return "denied";
+  }
+  try{
+    const permission = await Notification.requestPermission();
+    console.log("Permission:", permission);
+    return permission;
+  } catch(e){
+    console.error("Notification permission error:", e);
     return "default";
   }
 }
@@ -740,8 +778,17 @@ function pushBrowserNotification(message){
   if(!("Notification" in window)) return;
   if(Notification.permission !== "granted") return;
   try{
-    new Notification("Live Requests", { body: message });
-  } catch(e){}
+    const n = new Notification("Live Requests", {
+      body: message,
+      tag: "live-request"
+    });
+    n.onclick = () => {
+      try { window.focus(); } catch(e){}
+      n.close();
+    };
+  } catch(e){
+    console.error("Notification error:", e);
+  }
 }
 
 
