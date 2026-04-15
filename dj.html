@@ -4,167 +4,40 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Requests - DJ Side</title>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
   <style>
-    :root{
-      --bg:#0a0b0f;
-      --panel:#12141b;
-      --panel-2:#171a22;
-      --line:#252938;
-      --text:#f3f5fb;
-      --muted:#9ba3b7;
-      --green:#3ddc84;
-      --red:#ff6b6b;
-      --blue:#7cc7ff;
-      --yellow:#ffd166;
-      --shadow:0 18px 50px rgba(0,0,0,.35);
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;padding:0;
-      background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    }
-    body{min-height:100vh}
-    .app{max-width:1320px;margin:0 auto;padding:18px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
-    .brand h1{margin:0;font-size:26px;line-height:1.05}
-    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
-    .view-toggle{
-      display:flex;gap:8px;background:rgba(255,255,255,.04);
-      border:1px solid var(--line);padding:6px;border-radius:999px;flex-wrap:wrap;
-    }
-    .view-toggle button,.ghost-btn,.primary-btn,.danger-btn,.tiny-btn{
-      appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit;
-    }
-    .view-toggle button{
-      padding:10px 16px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px;
-    }
-    .view-toggle button.active{background:var(--green);color:#07110b}
-    .panel{
-      background:linear-gradient(180deg,var(--panel),var(--panel-2));
-      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
-    }
-    .panel-header{
-      display:flex;justify-content:space-between;align-items:center;gap:12px;
-      padding:18px 18px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;
-    }
-    .panel-header h2{margin:0;font-size:18px}
-    .panel-header p{margin:4px 0 0;color:var(--muted);font-size:13px}
-    .panel-body{padding:18px}
-    .grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
-    .grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    :root{--bg:#0a0b0f;--panel:#12141b;--panel-2:#171a22;--line:#252938;--text:#f3f5fb;--muted:#9ba3b7;--green:#3ddc84;--red:#ff6b6b;--blue:#7cc7ff;--yellow:#ffd166;--shadow:0 18px 50px rgba(0,0,0,.35);--radius:18px}
+    *{box-sizing:border-box} html,body{margin:0;padding:0;background:linear-gradient(180deg,#090a0d,#0f1218 40%,#0c0f15);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} body{min-height:100vh}
+    .app{max-width:1380px;margin:0 auto;padding:18px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+    .brand h1{margin:0;font-size:26px;line-height:1.05}.brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .view-toggle{display:flex;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:6px;border-radius:999px;flex-wrap:wrap}
+    .view-toggle button,.ghost-btn,.primary-btn,.danger-btn,.tiny-btn,select.action-select{appearance:none;border:none;cursor:pointer;transition:.18s ease;font-weight:700;font-family:inherit}
+    .view-toggle button{padding:10px 16px;border-radius:999px;background:transparent;color:var(--muted);font-size:14px}.view-toggle button.active{background:var(--green);color:#07110b}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+    .panel-header h2{margin:0;font-size:18px}.panel-header p{margin:4px 0 0;color:var(--muted);font-size:13px}.panel-body{padding:18px}
+    .grid-2{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input,select{
-      width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);
-      border-radius:12px;padding:12px 13px;font-size:15px;outline:none;
-    }
-    .checkbox-row{
-      display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3040;background:#0f1219;color:var(--text);
-      border-radius:12px;min-height:48px;
-    }
-    .checkbox-row input{width:auto;margin:0}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}
-    .primary-btn{background:var(--green);color:#08100b}
-    .ghost-btn{background:#1a1f2a;color:var(--text);border:1px solid #2c3345}
-    .danger-btn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}
-    .tiny-btn{padding:7px 10px;border-radius:10px;font-size:12px;background:#1b202b;color:var(--text);border:1px solid #2c3345}
-    .event-banner{
-      display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px;
-      border:1px solid #263246;background:linear-gradient(180deg,rgba(124,199,255,.08),rgba(61,220,132,.05));
-      border-radius:14px;margin-bottom:16px;flex-wrap:wrap;
-    }
-    .event-banner h3{margin:0;font-size:17px}
-    .event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
-    .badge{
-      display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;
-      background:#121826;border:1px solid #263246;color:#d6ecff;font-size:12px;font-weight:700;white-space:nowrap;
-    }
-    .badge.live{color:#b9ffd5;border-color:#1f6f45;background:#0f1b15}
-    .badge.closed{color:#ffcdcd;border-color:#70303a;background:#181014}
-    .badge.tip{color:#ffeab3;border-color:#6e5a18;background:#1c1607}
-    .badge.repeat{color:#ffd6ff;border-color:#6f3577;background:#180d1a}
-    .badge.dup{color:#ffe1c2;border-color:#7d4b21;background:#1b1208}
-    .requester-card{
-      background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px;
-    }
-    .requester-card h3{margin:0 0 8px;font-size:16px}
-    .helper{font-size:12px;color:var(--muted);line-height:1.5}
-    .split-stack{display:grid;gap:18px}
-    .request-list{display:grid;gap:12px}
-    .request-card{
-      border:1px solid #283041;background:#0f131b;border-radius:16px;padding:14px;
-    }
-    .request-head{
-      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;
-    }
-    .request-title{display:flex;flex-direction:column;gap:4px;min-width:0}
-    .request-title strong{font-size:17px;line-height:1.2;word-break:break-word}
-    .request-sub{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word}
-    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .success,.warning{
-      border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5;
-    }
-    .success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}
-    .warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}
-    .hidden{display:none!important}
-    .empty{
-      border:1px dashed #31384a;padding:24px;border-radius:16px;color:var(--muted);
-      text-align:center;background:rgba(255,255,255,.02);
-    }
-    .qr-wrap{
-      display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start;margin-top:14px;
-    }
-    .qr-card{
-      background:#fff;color:#111;border-radius:18px;padding:14px;display:grid;gap:10px;justify-items:center;align-content:start;min-height:316px;
-    }
-    .qr-card img{width:200px;height:200px;object-fit:contain;border-radius:10px;background:#fff}
-    .flyer-card{
-      background:#10151e;border:1px solid #283246;border-radius:18px;padding:18px;display:grid;gap:12px;
-    }
-    .flyer-preview{
-      background:#fff;color:#111;border-radius:18px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center;
-    }
-    .flyer-preview .big{font-size:28px;font-weight:900;letter-spacing:.3px}
-    .flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}
-    .flyer-preview img{width:220px;height:220px;object-fit:contain}
-    .flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .settings-box{
-      background:#101723;border:1px solid #283246;border-radius:18px;padding:15px;margin-top:14px;
-    }
-    .settings-box h3{margin:0 0 10px}
-    .request-flags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-
-    .filters-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-    .filter-btn{
-      appearance:none;border:1px solid #2c3345;background:#161b25;color:var(--text);
-      border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;font-weight:700;
-    }
-    .filter-btn.active{background:#24354d;border-color:#3d5c86}
-    .now-playing-card,.history-card{
-      background:#101723;border:1px solid #28405f;border-radius:16px;padding:14px;
-    }
-    .now-playing-card h3,.history-card h3{margin:0 0 10px;font-size:16px}
-    
-    .event-list{display:grid;gap:10px;margin-top:14px}
-    .event-item{border:1px solid #283246;background:#0f141d;border-radius:14px;padding:12px}
-    .event-item.current{border-color:#2f8e5c;box-shadow:0 0 0 1px rgba(61,220,132,.25) inset}
-    .event-item h4{margin:0 0 6px;font-size:15px}
-    .event-item .meta{color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:10px}
-
-    @media (max-width:1024px){
-      .grid-3{grid-template-columns:1fr}
-    }
-    @media (max-width:900px){
-      .qr-wrap,.grid-2{grid-template-columns:1fr}
-    }
+    input,select{width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;padding:12px 13px;font-size:15px;outline:none}
+    .checkbox-row{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;min-height:48px}.checkbox-row input{width:auto;margin:0}
+    .row{display:flex;gap:10px;flex-wrap:wrap}.primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}.primary-btn{background:var(--green);color:#08100b}.ghost-btn{background:#1a1f2a;color:var(--text);border:1px solid #2c3345}.danger-btn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}.tiny-btn{padding:7px 10px;border-radius:10px;font-size:12px;background:#1b202b;color:var(--text);border:1px solid #2c3345}
+    .event-banner{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px;border:1px solid #263246;background:linear-gradient(180deg,rgba(124,199,255,.08),rgba(61,220,132,.05));border-radius:14px;margin-bottom:16px;flex-wrap:wrap}
+    .event-banner h3{margin:0;font-size:17px}.event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
+    .badge{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#121826;border:1px solid #263246;color:#d6ecff;font-size:12px;font-weight:700;white-space:nowrap}
+    .badge.live{color:#b9ffd5;border-color:#1f6f45;background:#0f1b15}.badge.closed{color:#ffcdcd;border-color:#70303a;background:#181014}.badge.tip{color:#ffeab3;border-color:#6e5a18;background:#1c1607}.badge.repeat{color:#ffd6ff;border-color:#6f3577;background:#180d1a}.badge.dup{color:#ffe1c2;border-color:#7d4b21;background:#1b1208}
+    .card{background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px}.card h3{margin:0 0 8px;font-size:16px}.helper{font-size:12px;color:var(--muted);line-height:1.5}
+    .split-stack{display:grid;gap:18px}.request-list{display:grid;gap:12px}.request-card{border:1px solid #283041;background:#0f131b;border-radius:16px;padding:14px}
+    .request-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap}.request-title{display:flex;flex-direction:column;gap:4px;min-width:0}.request-title strong{font-size:17px;line-height:1.2;word-break:break-word}.request-sub{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word}
+    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.success,.warning,.info{border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5}.success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}.warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}.info{color:#d2e8ff;background:#101b26;border:1px solid #2b4868}
+    .hidden{display:none!important}.empty{border:1px dashed #31384a;padding:24px;border-radius:16px;color:var(--muted);text-align:center;background:rgba(255,255,255,.02)}
+    .qr-wrap{display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start;margin-top:14px}.qr-card{background:#fff;color:#111;border-radius:18px;padding:14px;display:grid;gap:10px;justify-items:center;align-content:start;min-height:316px}.qr-card img{width:200px;height:200px;object-fit:contain;border-radius:10px;background:#fff}
+    .flyer-card{background:#10151e;border:1px solid #283246;border-radius:18px;padding:18px;display:grid;gap:12px}.flyer-preview{background:#fff;color:#111;border-radius:18px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center}.flyer-preview .big{font-size:28px;font-weight:900;letter-spacing:.3px}.flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}.flyer-preview img{width:220px;height:220px;object-fit:contain}.flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .settings-box{background:#101723;border:1px solid #283246;border-radius:18px;padding:15px;margin-top:14px}.settings-box h3{margin:0 0 10px}.request-flags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .event-list{display:grid;gap:8px}.event-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border:1px solid #283246;background:#0f141d;border-radius:12px}
+    .now-playing-box,.history-box{background:#101723;border:1px solid #283246;border-radius:18px;padding:15px}.history-list{display:grid;gap:8px;margin-top:10px}.history-item{padding:10px 12px;border:1px solid #283246;border-radius:12px;background:#0f141d}
+    @media (max-width:1024px){.grid-3{grid-template-columns:1fr}} @media (max-width:900px){.qr-wrap,.grid-2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -172,13 +45,12 @@
   <div class="topbar">
     <div class="brand">
       <h1>Live Requests</h1>
-      <p>DJ side with event setup, request limits, cutoff settings, and returning-requester notifications.</p>
+      <p>DJ side with private requests, public queue sync, presets, and owner-only events.</p>
       <div id="accountEmail" style="margin-top:8px;color:#9ba3b7;font-size:12px"></div>
     </div>
     <div class="view-toggle">
       <button id="showFullBtn" class="active" type="button">Full DJ View</button>
       <button id="showQueueBtn" type="button">Requests Only</button>
-      <button id="newEventBtn" type="button">Create New Event</button>
       <button id="loadLiveBtn" type="button">Load My Events</button>
       <button id="logoutBtn" type="button">Logout</button>
     </div>
@@ -188,120 +60,41 @@
     <div class="panel-header">
       <div>
         <h2>DJ / Event Side</h2>
-        <p>Create the event, generate the QR-style link, and manage the queue.</p>
+        <p>Create the event, generate the QR link, and manage the queue.</p>
+      </div>
+      <div class="row">
+        <button class="ghost-btn" id="newEventBtn" type="button">Create New Event</button>
       </div>
     </div>
 
     <div class="panel-body split-stack">
       <div id="djSetupSection">
         <div class="event-banner" id="activeEventBanner">
-          <div>
-            <h3>No active event yet</h3>
-            <div class="meta">Create an event below, then use the public request link on your phone.</div>
-          </div>
+          <div><h3>No event loaded</h3><div class="meta">Create or load one of your events to begin.</div></div>
           <span class="badge closed">No Event</span>
         </div>
 
         <div class="grid-2">
-          <div>
-            <label for="eventName">Event name</label>
-            <input id="eventName" placeholder="Friday Night Open Format" />
-          </div>
-          <div>
-            <label for="eventVenue">Location / venue</label>
-            <input id="eventVenue" placeholder="Club X" />
-          </div>
-          <div>
-            <label for="eventDate">Date</label>
-            <input id="eventDate" type="date" />
-          </div>
-          <div>
-            <label for="eventStart">Start time</label>
-            <input id="eventStart" type="time" />
-          </div>
-          <div>
-            <label for="eventEnd">End time</label>
-            <input id="eventEnd" type="time" />
-          </div>
-          <div>
-            <label for="djName">DJ name</label>
-            <input id="djName" placeholder="DJ Tripp" />
-          </div>
+          <div><label for="eventName">Event name</label><input id="eventName" placeholder="Friday Night Open Format" /></div>
+          <div><label for="eventVenue">Location / venue</label><input id="eventVenue" placeholder="Club X" /></div>
+          <div><label for="eventDate">Date</label><input id="eventDate" type="date" /></div>
+          <div><label for="eventStart">Start time</label><input id="eventStart" type="time" /></div>
+          <div><label for="eventEnd">End time</label><input id="eventEnd" type="time" /></div>
+          <div><label for="djName">DJ name</label><input id="djName" placeholder="DJ Tripp" /></div>
         </div>
 
         <div class="settings-box">
           <h3>Request Settings</h3>
           <div class="grid-3">
-            <div>
-              <label for="requestLimitMinutes">Limit per person</label>
-              <select id="requestLimitMinutes">
-                <option value="0">No limit</option>
-                <option value="5">1 request every 5 minutes</option>
-                <option value="10">1 request every 10 minutes</option>
-                <option value="15">1 request every 15 minutes</option>
-                <option value="30">1 request every 30 minutes</option>
-                <option value="60">1 request every 1 hour</option>
-              </select>
-            </div>
-            <div>
-              <label for="cutoffMinutes">Request cutoff before show ends</label>
-              <select id="cutoffMinutes">
-                <option value="0">No cutoff</option>
-                <option value="30">30 minutes before end</option>
-                <option value="60">1 hour before end</option>
-              </select>
-            </div>
-            <div>
-              <label>Returning requester alerts</label>
-              <div class="checkbox-row">
-                <input id="flagReturningRequesters" type="checkbox" checked />
-                <span>Notify if requester has requested at past events</span>
-              </div>
-            </div>
+            <div><label for="requestLimitMinutes">Limit per person</label><select id="requestLimitMinutes"><option value="0">No limit</option><option value="5">1 request every 5 minutes</option><option value="10">1 request every 10 minutes</option><option value="15">1 request every 15 minutes</option><option value="30">1 request every 30 minutes</option><option value="60">1 request every 1 hour</option></select></div>
+            <div><label for="cutoffMinutes">Request cutoff before show ends</label><select id="cutoffMinutes"><option value="0">No cutoff</option><option value="30">30 minutes before end</option><option value="60">1 hour before end</option></select></div>
+            <div><label>Returning requester alerts</label><div class="checkbox-row"><input id="flagReturningRequesters" type="checkbox" checked /><span>Notify if requester has requested at past events</span></div></div>
+            <div><label>Email required</label><div class="checkbox-row"><input id="emailRequired" type="checkbox" checked /><span>Require email on requester page</span></div></div>
+            <div><label for="recurrenceMode">Recurrence</label><select id="recurrenceMode"><option value="none">One-time event</option><option value="weekly_2">Weekly, 2 total events</option><option value="weekly_4">Weekly, 4 total events</option><option value="weekly_8">Weekly, 8 total events</option></select></div>
+            <div><label for="tipLinkVenmo">Venmo link (optional)</label><input id="tipLinkVenmo" placeholder="https://venmo.com/yourname" /></div>
+            <div><label for="tipLinkPaypal">PayPal link (optional)</label><input id="tipLinkPaypal" placeholder="https://paypal.me/yourname" /></div>
           </div>
-          <div class="grid-2" style="margin-top:12px;">
-            <div>
-              <label for="venmoLink">Venmo link (optional)</label>
-              <input id="venmoLink" placeholder="https://venmo.com/yourname" />
-            </div>
-            <div>
-              <label for="paypalLink">PayPal link (optional)</label>
-              <input id="paypalLink" placeholder="https://paypal.me/yourname" />
-            </div>
-            <div>
-              <label for="notificationSoundEnabled">Incoming sound alert</label>
-              <div class="checkbox-row">
-                <input id="notificationSoundEnabled" type="checkbox" checked />
-                <span>Play a short sound on new requests</span>
-              </div>
-            </div>
-          </div>
-          <div class="grid-3" style="margin-top:12px;">
-            <div>
-              <label>Email required for requests</label>
-              <div class="checkbox-row">
-                <input id="emailRequired" type="checkbox" checked />
-                <span>Require an email for this event</span>
-              </div>
-            </div>
-            <div>
-              <label for="recurrenceType">Recurring event</label>
-              <select id="recurrenceType">
-                <option value="none">One-time event</option>
-                <option value="weekly">Repeat weekly</option>
-              </select>
-            </div>
-            <div>
-              <label for="recurrenceCount">Number of weekly events</label>
-              <select id="recurrenceCount">
-                <option value="1">1 event</option>
-                <option value="2">2 events</option>
-                <option value="4">4 events</option>
-                <option value="8">8 events</option>
-              </select>
-            </div>
-          </div>
-          <div class="helper" style="margin-top:10px;">Any request with a tip amount greater than $0 bypasses both the request limit and the cutoff. Venmo and PayPal links are optional and appear on the requester side if filled in. Weekly recurrence creates multiple future events from the same settings.</div>
+          <div class="helper" style="margin-top:10px;">Tipped requests bypass the time limit and cutoff. Preset responses can also grant an override so the requester can try again immediately.</div>
         </div>
 
         <div class="row" style="margin-top:12px;">
@@ -309,7 +102,7 @@
           <button class="ghost-btn" id="setLiveNowBtn" type="button">Make Event Live Now</button>
         </div>
 
-        <div class="requester-card" style="margin-top:14px;">
+        <div class="card" style="margin-top:14px;">
           <h3>Requester link for QR code</h3>
           <div class="helper">This is the public page requesters should open or scan.</div>
           <input id="eventLink" readonly value="Create an event first" style="margin-top:10px;" />
@@ -321,17 +114,10 @@
             <img id="qrImage" alt="Event QR code" />
             <div id="qrCaption" style="font-size:12px; color:#555; text-align:center;">Create an event to generate the QR code.</div>
           </div>
-
           <div class="flyer-card">
             <h3 style="margin:0;">Screen / flyer version</h3>
             <div class="helper">Clean QR block you can screenshot, print, or open in a separate window.</div>
-
-            <div class="flyer-preview" id="flyerPreview">
-              <div class="big" id="flyerTitle">Live Requests</div>
-              <img id="flyerQrImage" alt="Flyer QR code" />
-              <div class="small" id="flyerMeta">Create an event to generate the flyer-ready QR.</div>
-            </div>
-
+            <div class="flyer-preview"><div class="big" id="flyerTitle">Live Requests</div><img id="flyerQrImage" alt="Flyer QR code" /><div class="small" id="flyerMeta">Create an event to generate the flyer-ready QR.</div></div>
             <div class="flyer-actions">
               <button class="primary-btn" id="openFlyerBtn" type="button">Open Flyer View</button>
               <button class="ghost-btn" id="downloadQrBtn" type="button">Open QR Image</button>
@@ -340,866 +126,91 @@
           </div>
         </div>
 
-        <div class="requester-card" style="margin-top:14px;">
-          <h3>Live & Upcoming Events</h3>
-          <div class="helper">Use this to load any current or upcoming event. Multiple DJs or events can now run at the same time.</div>
-          <div id="eventListBox" class="event-list"></div>
+        <div class="settings-box">
+          <h3>Your Events</h3>
+          <div id="eventList" class="event-list"></div>
         </div>
       </div>
 
       <div id="djQueueSection">
         <div class="panel-header" style="padding:0 0 14px; border:none;">
-          <div>
-            <h2>Live Queue</h2>
-            <p>Artist is shown first, then track title.</p>
-          </div>
-          <div class="row">
-            <span class="badge" id="requestCountBadge">0 Requests</span>
-            <span class="badge" id="notificationBadge">No New Requests</span>
-          </div>
+          <div><h2>Live Queue</h2><p>Private DJ view. Public queue is stored separately for requester-safe reads.</p></div>
+          <div class="row"><span class="badge" id="requestCountBadge">0 Requests</span><span class="badge" id="notificationBadge">No New Requests</span></div>
         </div>
-
         <div id="notificationBox" class="success hidden"></div>
         <div id="statusBox" class="warning hidden"></div>
-        <div class="filters-bar">
-          <button class="filter-btn active" id="filterAllBtn" type="button">All</button>
-          <button class="filter-btn" id="filterNewBtn" type="button">New</button>
-          <button class="filter-btn" id="filterTippedBtn" type="button">Tipped</button>
-          <button class="filter-btn" id="filterDuplicateBtn" type="button">Duplicates</button>
-          <button class="filter-btn" id="filterReturningBtn" type="button">Returning</button>
+        <div class="settings-box" style="margin-bottom:14px;">
+          <h3>Queue Filters</h3>
+          <div class="row">
+            <button class="ghost-btn" id="filterAllBtn" type="button">All</button>
+            <button class="ghost-btn" id="filterNewBtn" type="button">New</button>
+            <button class="ghost-btn" id="filterTippedBtn" type="button">Tipped</button>
+            <button class="ghost-btn" id="filterDuplicateBtn" type="button">Duplicates</button>
+            <button class="ghost-btn" id="filterReturningBtn" type="button">Returning</button>
+          </div>
         </div>
-        <div id="nowPlayingBox" class="now-playing-card hidden"></div>
-        <div id="queueList" class="request-list"></div>
-        <div id="historyBox" class="history-card hidden"></div>
+        <div class="now-playing-box"><h3 style="margin:0 0 8px;">Now Playing</h3><div id="nowPlayingBox" class="helper">Nothing marked as now playing yet.</div></div>
+        <div id="queueList" class="request-list" style="margin-top:14px;"></div>
+        <div class="history-box" style="margin-top:14px;"><h3 style="margin:0 0 8px;">History</h3><div id="historyList" class="history-list"></div></div>
       </div>
     </div>
   </section>
 </div>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
+const firebaseConfig = { apiKey: "AIzaSyBPM9sZnzGxHacIaCRuD1abDxygwYBU2qM",
   authDomain: "live-requests-73c57.firebaseapp.com",
   projectId: "live-requests-73c57",
-  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc"
+  appId: "1:1028183935413:web:56f8794bf60d2e9c4cb1fc" };
+const PRESET_RESPONSES = {
+  unavailable: { label: "I'm sorry, the DJ does not have this song", overrideLimit: true },
+  soon: { label: "Your song is coming on soon", overrideLimit: false },
+  great: { label: "Great choice!", overrideLimit: false },
+  theme: { label: "I'm sorry, this song doesn't fit the theme", overrideLimit: true }
 };
-
-let db = null;
-let auth = null;
-let currentUser = null;
-let unsubscribeRequests = null;
-let unsubscribeEventList = null;
-let activeEventId = null;
-let currentEventData = null;
-let currentRequests = [];
-let currentFilter = "all";
-let audioCtx = null;
-let currentEventList = [];
-
+let db=null, auth=null, currentUser=null, unsubscribeRequests=null, activeEventId=null, currentEventData=null, currentRequests=[], currentFilter="all", currentEventList=[];
 const els = {
-  showFullBtn: document.getElementById("showFullBtn"),
-  showQueueBtn: document.getElementById("showQueueBtn"),
-  loadLiveBtn: document.getElementById("loadLiveBtn"),
-  logoutBtn: document.getElementById("logoutBtn"),
-  accountEmail: document.getElementById("accountEmail"),
-  newEventBtn: document.getElementById("newEventBtn"),
-  djSetupSection: document.getElementById("djSetupSection"),
-  eventName: document.getElementById("eventName"),
-  eventVenue: document.getElementById("eventVenue"),
-  eventDate: document.getElementById("eventDate"),
-  eventStart: document.getElementById("eventStart"),
-  eventEnd: document.getElementById("eventEnd"),
-  djName: document.getElementById("djName"),
-  requestLimitMinutes: document.getElementById("requestLimitMinutes"),
-  recurrenceType: document.getElementById("recurrenceType"),
-  recurrenceCount: document.getElementById("recurrenceCount"),
-  emailRequired: document.getElementById("emailRequired"),
-  eventListBox: document.getElementById("eventListBox"),
-  cutoffMinutes: document.getElementById("cutoffMinutes"),
-  flagReturningRequesters: document.getElementById("flagReturningRequesters"),
-  venmoLink: document.getElementById("venmoLink"),
-  paypalLink: document.getElementById("paypalLink"),
-  notificationSoundEnabled: document.getElementById("notificationSoundEnabled"),
-  saveEventBtn: document.getElementById("saveEventBtn"),
-  setLiveNowBtn: document.getElementById("setLiveNowBtn"),
-  activeEventBanner: document.getElementById("activeEventBanner"),
-  eventLink: document.getElementById("eventLink"),
-  queueList: document.getElementById("queueList"),
-  requestCountBadge: document.getElementById("requestCountBadge"),
-  notificationBox: document.getElementById("notificationBox"),
-  notificationBadge: document.getElementById("notificationBadge"),
-  statusBox: document.getElementById("statusBox"),
-  filterAllBtn: document.getElementById("filterAllBtn"),
-  filterNewBtn: document.getElementById("filterNewBtn"),
-  filterTippedBtn: document.getElementById("filterTippedBtn"),
-  filterDuplicateBtn: document.getElementById("filterDuplicateBtn"),
-  filterReturningBtn: document.getElementById("filterReturningBtn"),
-  nowPlayingBox: document.getElementById("nowPlayingBox"),
-  historyBox: document.getElementById("historyBox"),
-  qrImage: document.getElementById("qrImage"),
-  qrCaption: document.getElementById("qrCaption"),
-  flyerQrImage: document.getElementById("flyerQrImage"),
-  flyerTitle: document.getElementById("flyerTitle"),
-  flyerMeta: document.getElementById("flyerMeta"),
-  openFlyerBtn: document.getElementById("openFlyerBtn"),
-  downloadQrBtn: document.getElementById("downloadQrBtn"),
-  copyLinkBtn: document.getElementById("copyLinkBtn")
+  showFullBtn:document.getElementById("showFullBtn"), showQueueBtn:document.getElementById("showQueueBtn"), loadLiveBtn:document.getElementById("loadLiveBtn"), logoutBtn:document.getElementById("logoutBtn"), newEventBtn:document.getElementById("newEventBtn"),
+  djSetupSection:document.getElementById("djSetupSection"), eventName:document.getElementById("eventName"), eventVenue:document.getElementById("eventVenue"), eventDate:document.getElementById("eventDate"), eventStart:document.getElementById("eventStart"), eventEnd:document.getElementById("eventEnd"), djName:document.getElementById("djName"),
+  requestLimitMinutes:document.getElementById("requestLimitMinutes"), cutoffMinutes:document.getElementById("cutoffMinutes"), flagReturningRequesters:document.getElementById("flagReturningRequesters"), emailRequired:document.getElementById("emailRequired"), recurrenceMode:document.getElementById("recurrenceMode"), tipLinkVenmo:document.getElementById("tipLinkVenmo"), tipLinkPaypal:document.getElementById("tipLinkPaypal"),
+  saveEventBtn:document.getElementById("saveEventBtn"), setLiveNowBtn:document.getElementById("setLiveNowBtn"), activeEventBanner:document.getElementById("activeEventBanner"), eventLink:document.getElementById("eventLink"), queueList:document.getElementById("queueList"), requestCountBadge:document.getElementById("requestCountBadge"), notificationBox:document.getElementById("notificationBox"), notificationBadge:document.getElementById("notificationBadge"), statusBox:document.getElementById("statusBox"), qrImage:document.getElementById("qrImage"), qrCaption:document.getElementById("qrCaption"), flyerQrImage:document.getElementById("flyerQrImage"), flyerTitle:document.getElementById("flyerTitle"), flyerMeta:document.getElementById("flyerMeta"), openFlyerBtn:document.getElementById("openFlyerBtn"), downloadQrBtn:document.getElementById("downloadQrBtn"), copyLinkBtn:document.getElementById("copyLinkBtn"), eventList:document.getElementById("eventList"), nowPlayingBox:document.getElementById("nowPlayingBox"), historyList:document.getElementById("historyList"), filterAllBtn:document.getElementById("filterAllBtn"), filterNewBtn:document.getElementById("filterNewBtn"), filterTippedBtn:document.getElementById("filterTippedBtn"), filterDuplicateBtn:document.getElementById("filterDuplicateBtn"), filterReturningBtn:document.getElementById("filterReturningBtn"), accountEmail:document.getElementById("accountEmail")
 };
-
-function escapeHtml(text) {
-  return String(text ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
-}
-
-function formatDateTime(dateObj) {
-  if (!(dateObj instanceof Date) || isNaN(dateObj)) return "Invalid date";
-  return dateObj.toLocaleString([], {
-    year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"
-  });
-}
-
-function eventFromInputs(forceLive=false) {
-  let date = els.eventDate.value;
-  let startTime = els.eventStart.value;
-  let endTime = els.eventEnd.value;
-
-  if (forceLive) {
-    const now = new Date();
-    const start = new Date(now.getTime() - 60*60*1000);
-    const end = new Date(now.getTime() + 2*60*60*1000);
-    date = now.toISOString().slice(0,10);
-    startTime = start.toTimeString().slice(0,5);
-    endTime = end.toTimeString().slice(0,5);
-  }
-
-  if (!els.eventName.value.trim() || !els.eventVenue.value.trim() || !date || !startTime || !endTime) {
-    return null;
-  }
-
-  const startAt = new Date(`${date}T${startTime}`).getTime();
-  const endAt = new Date(`${date}T${endTime}`).getTime();
-
-  return {
-    name: els.eventName.value.trim(),
-    venue: els.eventVenue.value.trim(),
-    djName: els.djName.value.trim(),
-    date,
-    startTime,
-    endTime,
-    startAt,
-    endAt,
-    active: true,
-    requestLimitMinutes: Number(els.requestLimitMinutes.value || 0),
-    cutoffMinutes: Number(els.cutoffMinutes.value || 0),
-    flagReturningRequesters: !!els.flagReturningRequesters.checked,
-    emailRequired: !!els.emailRequired.checked,
-    venmoLink: els.venmoLink.value.trim(),
-    paypalLink: els.paypalLink.value.trim(),
-    notificationSoundEnabled: !!els.notificationSoundEnabled.checked,
-    recurrenceType: els.recurrenceType.value,
-    recurrenceCount: Number(els.recurrenceCount.value || 1),
-    updatedAt: Date.now()
-  };
-}
-
-function eventStatus(eventData) {
-  if (!eventData || !eventData.startAt || !eventData.endAt) return "draft";
-  const now = Date.now();
-  if (now < eventData.startAt) return "upcoming";
-  if (now > eventData.endAt) return "ended";
-  return "live";
-}
-
-function getRequesterLink() {
-  if (!activeEventId) return "";
-  const requestUrl = new URL("request.html", window.location.href);
-  requestUrl.searchParams.set("event", activeEventId);
-  return requestUrl.toString();
-}
-
-function getQrUrl() {
-  const link = getRequesterLink();
-  if (!link) return "";
-  return `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=20&data=${encodeURIComponent(link)}`;
-}
-
-function showStatus(message, type="warning") {
-  els.statusBox.textContent = message;
-  els.statusBox.className = type === "success" ? "success" : "warning";
-  els.statusBox.classList.remove("hidden");
-}
-
-function hideStatus() {
-  els.statusBox.classList.add("hidden");
-}
-
-function showNotification(message) {
-  els.notificationBox.textContent = message;
-  els.notificationBox.classList.remove("hidden");
-  els.notificationBadge.textContent = "New Request";
-}
-
-function hideNotification() {
-  els.notificationBox.classList.add("hidden");
-  els.notificationBadge.textContent = "No New Requests";
-}
-
-function recurringText(eventData) {
-  if (eventData.recurrenceType === "weekly" && Number(eventData.recurrenceCount || 1) > 1) {
-    return `Repeats weekly (${Number(eventData.recurrenceCount)} events)`;
-  }
-  return "One-time event";
-}
-
-function renderEventList(events) {
-  currentEventList = events;
-  if (!events.length) {
-    els.eventListBox.innerHTML = `<div class="empty">No live or upcoming events found yet.</div>`;
-    return;
-  }
-  els.eventListBox.innerHTML = events.map(event => {
-    const status = eventStatus(event);
-    const statusText = status === "live" ? "Live" : status === "upcoming" ? "Upcoming" : "Ended";
-    return `
-      <div class="event-item ${event.id === activeEventId ? 'current' : ''}">
-        <h4>${escapeHtml(event.name || 'Untitled Event')}</h4>
-        <div class="meta">${escapeHtml(event.venue || '')}<br>${event.startAt ? `${formatDateTime(new Date(event.startAt))} – ${formatDateTime(new Date(event.endAt))}` : ''}<br>${escapeHtml(event.djName || '')} · ${statusText}</div>
-        <div class="row">
-          <button class="tiny-btn" onclick="loadEventById('${event.id}')" type="button">Load</button>
-          <button class="tiny-btn" onclick="copyEventLinkById('${event.id}')" type="button">Copy Link</button>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-async function refreshEventList(selectNewest=false) {
-  if (!db || !currentUser) return;
-  try {
-    const snap = await db.collection('events').where('ownerUid','==', currentUser.uid).get();
-    const events = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a,b) => (b.startAt || 0) - (a.startAt || 0));
-    renderEventList(events);
-    if (selectNewest && events.length) {
-      const chosen = events[events.length - 1];
-      renderEvent(chosen.id, chosen);
-      listenRequests();
-    }
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function loadEventById(id) {
-  if (!db) return;
-  const doc = await db.collection('events').doc(id).get();
-  if (!doc.exists) return;
-  renderEvent(doc.id, doc.data());
-  listenRequests();
-  renderEventList(currentEventList);
-}
-
-async function copyEventLinkById(id) {
-  const requestUrl = new URL('request.html', window.location.href);
-  requestUrl.searchParams.set('event', id);
-  const link = requestUrl.toString();
-  try {
-    await navigator.clipboard.writeText(link);
-    showStatus('Request link copied.', 'success');
-  } catch (e) {
-    prompt('Copy this link:', link);
-  }
-}
-
-function blankEventForm() {
-  activeEventId = null;
-  currentEventData = null;
-  if (unsubscribeRequests) {
-    unsubscribeRequests();
-    unsubscribeRequests = null;
-  }
-  currentRequests = [];
-  els.eventName.value = "";
-  els.eventVenue.value = "";
-  els.eventDate.value = "";
-  els.eventStart.value = "";
-  els.eventEnd.value = "";
-  els.djName.value = "";
-  els.requestLimitMinutes.value = "0";
-  els.cutoffMinutes.value = "0";
-  els.flagReturningRequesters.checked = true;
-  els.emailRequired.checked = true;
-  els.recurrenceType.value = "none";
-  els.recurrenceCount.value = "1";
-  els.venmoLink.value = "";
-  els.paypalLink.value = "";
-  els.notificationSoundEnabled.checked = true;
-  els.eventLink.value = "Create an event first";
-  els.qrImage.removeAttribute("src");
-  els.flyerQrImage.removeAttribute("src");
-  els.qrCaption.textContent = "Create an event to generate the QR code.";
-  els.flyerTitle.textContent = "Live Requests";
-  els.flyerMeta.textContent = "Create an event to generate the flyer-ready QR.";
-  els.activeEventBanner.innerHTML = `
-    <div>
-      <h3>New event</h3>
-      <div class="meta">Fill in the form below and click Save / Update Event to create a separate event record.</div>
-    </div>
-    <span class="badge">Unsaved</span>
-  `;
-  renderQueue([]);
-  renderNowPlaying([]);
-  renderHistory([]);
-  renderEventList(currentEventList);
-  showStatus("New event form ready. Saving now will create a separate event instead of overwriting the loaded one.", "success");
-}
-
-function renderEvent(eventId, eventData) {
-  activeEventId = eventId;
-  currentEventData = eventData;
-
-  els.eventName.value = eventData.name || "";
-  els.eventVenue.value = eventData.venue || "";
-  els.djName.value = eventData.djName || "";
-  els.eventDate.value = eventData.date || "";
-  els.eventStart.value = eventData.startTime || "";
-  els.eventEnd.value = eventData.endTime || "";
-  els.requestLimitMinutes.value = String(eventData.requestLimitMinutes || 0);
-  els.cutoffMinutes.value = String(eventData.cutoffMinutes || 0);
-  els.flagReturningRequesters.checked = eventData.flagReturningRequesters !== false;
-  els.emailRequired.checked = eventData.emailRequired !== false;
-  els.recurrenceType.value = eventData.recurrenceType || "none";
-  els.recurrenceCount.value = String(eventData.recurrenceCount || 1);
-  els.venmoLink.value = eventData.venmoLink || "";
-  els.paypalLink.value = eventData.paypalLink || "";
-  els.notificationSoundEnabled.checked = eventData.notificationSoundEnabled !== false;
-
-  const status = eventStatus(eventData);
-  const badgeClass = status === "live" ? "badge live" : (status === "ended" ? "badge closed" : "badge");
-  const badgeText = status === "live" ? "Live Now" : status === "ended" ? "Ended" : "Upcoming";
-  const settingsText = [
-    eventData.requestLimitMinutes ? `Limit: every ${eventData.requestLimitMinutes} min` : "Limit: none",
-    eventData.cutoffMinutes ? `Cutoff: ${eventData.cutoffMinutes} min before end` : "Cutoff: none",
-    eventData.emailRequired !== false ? "Email: required" : "Email: optional",
-    eventData.flagReturningRequesters !== false ? "Returning alerts: on" : "Returning alerts: off",
-    eventData.notificationSoundEnabled !== false ? "Sound: on" : "Sound: off",
-    recurringText(eventData)
-  ].join(" · ");
-
-  els.activeEventBanner.innerHTML = `
-    <div>
-      <h3>${escapeHtml(eventData.name || "Untitled Event")}</h3>
-      <div class="meta">
-        ${escapeHtml(eventData.venue || "No venue")}<br>
-        DJ: ${escapeHtml(eventData.djName || "Not set")}<br>
-        ${eventData.startAt ? `${formatDateTime(new Date(eventData.startAt))} – ${formatDateTime(new Date(eventData.endAt))}` : "Add date/time"}<br>
-        ${escapeHtml(settingsText)}
-      </div>
-    </div>
-    <span class="${badgeClass}">${badgeText}</span>
-  `;
-
-  const link = getRequesterLink();
-  els.eventLink.value = link || "Create an event first";
-
-  const qrUrl = getQrUrl();
-  if (qrUrl) {
-    els.qrImage.src = qrUrl;
-    els.flyerQrImage.src = qrUrl;
-    els.qrCaption.textContent = eventData.name || "QR ready";
-    els.flyerTitle.textContent = "Live Requests";
-    els.flyerMeta.textContent = `${eventData.name || ""} • ${eventData.venue || ""}`;
-  }
-  renderEventList(currentEventList);
-}
-
-
-function playNotificationSound() {
-  try {
-    if (!currentEventData || currentEventData.notificationSoundEnabled === false) return;
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
-    audioCtx = audioCtx || new Ctx();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.2);
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-function applyQueueFilter(requests) {
-  const active = requests.filter(req => (req.status || "new") !== "history");
-  if (currentFilter === "new") return active.filter(req => !req.tip && !req.isDuplicate && !req.returningRequester);
-  if (currentFilter === "tipped") return active.filter(req => Number(req.tip || 0) > 0);
-  if (currentFilter === "duplicate") return active.filter(req => req.isDuplicate);
-  if (currentFilter === "returning") return active.filter(req => req.returningRequester);
-  return active;
-}
-
-function syncFilterButtons() {
-  const map = {
-    all: els.filterAllBtn,
-    new: els.filterNewBtn,
-    tipped: els.filterTippedBtn,
-    duplicate: els.filterDuplicateBtn,
-    returning: els.filterReturningBtn
-  };
-  Object.entries(map).forEach(([key, btn]) => btn.classList.toggle("active", currentFilter === key));
-}
-
-function renderNowPlaying(requests) {
-  const nowPlaying = requests.find(req => req.status === "now_playing");
-  if (!nowPlaying) {
-    els.nowPlayingBox.classList.add("hidden");
-    return;
-  }
-  els.nowPlayingBox.classList.remove("hidden");
-  els.nowPlayingBox.innerHTML = `
-    <h3>Now Playing</h3>
-    <div><strong>${escapeHtml(nowPlaying.artist)}</strong> — ${escapeHtml(nowPlaying.track)}</div>
-    <div class="helper" style="margin-top:6px;">Requested by ${escapeHtml(nowPlaying.name)} · ${escapeHtml(nowPlaying.email)}</div>
-    <div class="request-flags" style="margin-top:10px;">
-      ${nowPlaying.tip > 0 ? `<span class="badge tip">Tipped $${nowPlaying.tip}</span>` : ``}
-      ${nowPlaying.returningRequester ? `<span class="badge repeat">Past requester</span>` : ``}
-    </div>
-    <div class="request-actions" style="margin-top:12px;">
-      <button class="tiny-btn" onclick="moveToHistory('${nowPlaying.id}')" type="button">Move to History</button>
-      <button class="tiny-btn" onclick="clearNowPlaying('${nowPlaying.id}')" type="button">Return to Queue</button>
-    </div>
-  `;
-}
-
-function renderHistory(requests) {
-  const history = requests.filter(req => req.status === "history");
-  if (!history.length) {
-    els.historyBox.classList.add("hidden");
-    return;
-  }
-  els.historyBox.classList.remove("hidden");
-  els.historyBox.innerHTML = `
-    <h3>History</h3>
-    ${history.slice().reverse().map(req => `
-      <div style="padding:10px 0;border-top:1px solid #243248;">
-        <strong>${escapeHtml(req.artist)}</strong> — ${escapeHtml(req.track)}
-        <div class="helper">${escapeHtml(req.name)} · ${escapeHtml(req.email)}</div>
-      </div>
-    `).join("")}
-  `;
-}
-
-
-function renderQueue(requests) {
-  syncFilterButtons();
-  renderNowPlaying(requests);
-  renderHistory(requests);
-
-  const visible = applyQueueFilter(requests);
-  const activeCount = requests.filter(req => (req.status || "new") !== "history").length;
-  els.requestCountBadge.textContent = `${activeCount} Request${activeCount === 1 ? "" : "s"}`;
-
-  if (!visible.length) {
-    els.queueList.innerHTML = `<div class="empty">No requests match this filter right now.</div>`;
-    return;
-  }
-
-  els.queueList.innerHTML = visible.map((req, idx) => `
-    <div class="request-card">
-      <div class="request-head">
-        <div class="request-title">
-          <strong>${escapeHtml(req.artist)}</strong>
-          <strong style="font-size:15px; font-weight:600; color:#d5d9e6;">${escapeHtml(req.track)}</strong>
-          <div class="request-sub">
-            Requested by ${escapeHtml(req.name)} · ${escapeHtml(req.email)}<br>
-            ${req.status === "now_playing" ? "Now playing" : `Position ${idx + 1}`}
-          </div>
-          <div class="request-flags">
-            ${req.tip > 0 ? `<span class="badge tip">Tipped $${req.tip}</span>` : ``}
-            ${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}
-            ${req.returningRequester ? `<span class="badge repeat">Past requester (${req.returningRequesterCount || 1})</span>` : ``}
-          </div>
-        </div>
-      </div>
-
-      ${req.response ? `<div class="requester-card" style="padding:10px 12px; border-radius:12px; background:#101723;"><strong style="font-size:12px; color:#9bc5ff;">DJ Response</strong><div style="margin-top:4px; font-size:14px;">${escapeHtml(req.response)}</div></div>` : ""}
-
-      <div class="request-actions">
-        <button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Move Up</button>
-        <button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Move Down</button>
-        <button class="tiny-btn" onclick="markNowPlaying('${req.id}')" type="button">Now Playing</button>
-        <button class="tiny-btn" onclick="respondToRequest('${req.id}')" type="button">Respond</button>
-        <button class="danger-btn" style="padding:7px 10px; font-size:12px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function configLooksFilled() {
-  return (
-    firebaseConfig.apiKey !== "PASTE" &&
-    firebaseConfig.authDomain !== "PASTE" &&
-    firebaseConfig.projectId !== "PASTE" &&
-    firebaseConfig.appId !== "PASTE"
-  );
-}
-
-function initFirebase() {
-  if (!configLooksFilled()) {
-    showStatus("Paste your Firebase values into dj.html first.");
-    return false;
-  }
-
-  try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    auth = firebase.auth();
-    hideStatus();
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
-      }
-      await user.reload();
-      if (!user.emailVerified) {
-        await auth.signOut();
-        window.location.href = 'login.html?verified=needed';
-        return;
-      }
-      currentUser = user;
-      els.accountEmail.textContent = `Signed in as ${user.email || ""}`;
-      try {
-        await db.collection('users').doc(user.uid).set({
-          email: user.email || '',
-          emailVerified: true,
-          lastLoginAt: Date.now()
-        }, { merge: true });
-      } catch (e) {}
-      hideStatus();
-      await loadActiveEvent();
-    });
-    return true;
-  } catch (err) {
-    console.error(err);
-    showStatus("Firebase could not start. Double-check the values you pasted into dj.html.");
-    return false;
-  }
-}
-
-async function saveEvent(forceLive=false) {
-  const data = eventFromInputs(forceLive);
-  if (!data) {
-    showStatus("Please fill in event name, venue, date, start time, end time, and settings.");
-    return;
-  }
-  if (!db) return;
-
-  try {
-    const recurrenceType = data.recurrenceType || 'none';
-    const recurrenceCount = Number(data.recurrenceCount || 1);
-
-    if (!activeEventId) {
-      activeEventId = "event_" + Date.now();
-    }
-
-    data.ownerUid = currentUser.uid;
-    data.ownerEmail = currentUser.email || "";
-    await db.collection("events").doc(activeEventId).set(data, { merge: true });
-
-    if (recurrenceType === 'weekly' && recurrenceCount > 1) {
-      const seriesId = activeEventId;
-      for (let i = 1; i < recurrenceCount; i++) {
-        const offset = i * 7 * 24 * 60 * 60 * 1000;
-        const startAt = data.startAt + offset;
-        const endAt = data.endAt + offset;
-        const startDate = new Date(startAt);
-        const endDate = new Date(endAt);
-        const recurId = `${seriesId}_w${i+1}`;
-        await db.collection('events').doc(recurId).set({
-          ...data,
-          ownerUid: currentUser.uid,
-          ownerEmail: currentUser.email || '',
-          date: new Date(startAt).toISOString().slice(0,10),
-          startTime: startDate.toTimeString().slice(0,5),
-          endTime: endDate.toTimeString().slice(0,5),
-          startAt,
-          endAt,
-          seriesId,
-          recurrenceType: 'weekly',
-          recurrenceCount,
-          recurrenceIndex: i+1,
-          updatedAt: Date.now()
-        }, { merge: true });
-      }
-    }
-
-    await refreshEventList(false);
-    renderEvent(activeEventId, data);
-    listenRequests();
-    showStatus("Event saved live.", "success");
-  } catch (err) {
-    console.error(err);
-    showStatus("Could not save the event. Check Firestore rules.");
-  }
-}
-
-async function loadActiveEvent() {
-  if (!db || !currentUser) return;
-
-  try {
-    await refreshEventList(false);
-    const snap = await db.collection("events").where("ownerUid", "==", currentUser.uid).get();
-    const events = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a,b) => (b.startAt || 0) - (a.startAt || 0));
-    if (!events.length) {
-      showStatus("No live or upcoming events found yet. Create one first.");
-      return;
-    }
-    const preferred = events.find(e => eventStatus(e) === 'live') || events[0];
-    renderEvent(preferred.id, preferred);
-    listenRequests();
-    showStatus("Events loaded.", "success");
-  } catch (err) {
-    console.error(err);
-    showStatus("Could not load events.");
-  }
-}
-
-function listenRequests() {
-  if (!db || !activeEventId) return;
-
-  if (unsubscribeRequests) unsubscribeRequests();
-
-  unsubscribeRequests = db.collection("requests")
-    .where("eventId", "==", activeEventId)
-    .onSnapshot(snapshot => {
-      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      requests.sort((a,b) => {
-        const aStatus = a.status || "new";
-        const bStatus = b.status || "new";
-        const aPlaying = aStatus === "now_playing" ? 0 : aStatus === "history" ? 2 : 1;
-        const bPlaying = bStatus === "now_playing" ? 0 : bStatus === "history" ? 2 : 1;
-        if (aPlaying !== bPlaying) return aPlaying - bPlaying;
-        const aTip = Number(a.tip || 0) > 0 ? 0 : 1;
-        const bTip = Number(b.tip || 0) > 0 ? 0 : 1;
-        if (aTip !== bTip) return aTip - bTip;
-        if ((a.sortOrder ?? 999999) !== (b.sortOrder ?? 999999)) {
-          return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
-        }
-        return (a.createdAt ?? 0) - (b.createdAt ?? 0);
-      });
-
-      const added = snapshot.docChanges().filter(change => change.type === "added");
-      if (added.length) {
-        const latest = added[added.length - 1].doc.data();
-        let message = `New request: ${latest.artist} — ${latest.track} from ${latest.name}`;
-        if (currentEventData?.flagReturningRequesters && latest.returningRequester) {
-          message += ` · returning requester (${latest.returningRequesterCount || 1} past requests)`;
-        }
-        if (latest.isDuplicate) {
-          message += ` · duplicate request`;
-        }
-        if (latest.tip > 0) {
-          message += ` · tipped $${latest.tip}`;
-        }
-        showNotification(message);
-        playNotificationSound();
-      } else {
-        hideNotification();
-      }
-
-      currentRequests = requests;
-      renderQueue(requests);
-    }, err => {
-      console.error(err);
-      showStatus("Could not load requests for this event.");
-    });
-}
-
-async function moveRequest(id, direction) {
-  if (!db || !activeEventId) return;
-
-  const snapshot = await db.collection("requests").where("eventId", "==", activeEventId).get();
-  const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  requests.sort((a,b) => {
-    if ((a.sortOrder ?? 999999) !== (b.sortOrder ?? 999999)) return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
-    return (a.createdAt ?? 0) - (b.createdAt ?? 0);
-  });
-
-  const idx = requests.findIndex(r => r.id === id);
-  if (idx < 0) return;
-
-  const swapWith = idx + direction;
-  if (swapWith < 0 || swapWith >= requests.length) return;
-
-  const [item] = requests.splice(idx, 1);
-  requests.splice(swapWith, 0, item);
-
-  const batch = db.batch();
-  requests.forEach((req, i) => {
-    batch.set(db.collection("requests").doc(req.id), { sortOrder: i }, { merge: true });
-  });
-  await batch.commit();
-}
-
-async function deleteRequest(id) {
-  if (!db) return;
-  await db.collection("requests").doc(id).delete();
-}
-
-async function respondToRequest(id) {
-  if (!db) return;
-  const reply = prompt("Response to requester:");
-  if (reply === null) return;
-  await db.collection("requests").doc(id).set({ response: reply.trim() }, { merge: true });
-}
-
-async function copyLink() {
-  const link = getRequesterLink();
-  if (!link) {
-    alert("Create an event first.");
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(link);
-    showStatus("Request link copied.", "success");
-  } catch (e) {
-    prompt("Copy this link:", link);
-  }
-}
-
-function openQrImage() {
-  const qrUrl = getQrUrl();
-  if (!qrUrl) {
-    alert("Create an event first.");
-    return;
-  }
-  window.open(qrUrl, "_blank");
-}
-
-function openFlyerView() {
-  if (!activeEventId) {
-    alert("Create an event first.");
-    return;
-  }
-  const qrUrl = getQrUrl();
-  const name = els.eventName.value || "Event";
-  const venue = els.eventVenue.value || "";
-  const flyerHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${escapeHtml(name)} QR Flyer</title>
-<style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}
-.card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}
-.eyebrow{font-size:18px;font-weight:800;letter-spacing:.12em;color:#555;margin-bottom:8px}
-.title{font-size:42px;font-weight:900;line-height:1.05;margin-bottom:10px}
-.meta{font-size:20px;color:#444;margin-bottom:26px;line-height:1.45}
-img{width:min(420px,86vw);height:auto}
-.footer{margin-top:20px;font-size:20px;font-weight:700}
-.link{margin-top:12px;font-size:12px;color:#666;word-break:break-all}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="eyebrow">LIVE REQUESTS</div>
-  <div class="title">${escapeHtml(name)}</div>
-  <div class="meta">${escapeHtml(venue)}</div>
-  <img src="${qrUrl}" alt="QR code" />
-  <div class="footer">Open your camera and scan</div>
-  <div class="link">${escapeHtml(getRequesterLink())}</div>
-</div>
-</body>
-</html>`;
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.open();
-  win.document.write(flyerHtml);
-  win.document.close();
-}
-
-
-async function markNowPlaying(id) {
-  if (!db || !activeEventId) return;
-  const snapshot = await db.collection("requests").where("eventId", "==", activeEventId).get();
-  const batch = db.batch();
-  snapshot.docs.forEach(doc => {
-    if (doc.data().status === "now_playing" && doc.id !== id) {
-      batch.set(doc.ref, { status: "new" }, { merge: true });
-    }
-  });
-  batch.set(db.collection("requests").doc(id), { status: "now_playing" }, { merge: true });
-  await batch.commit();
-}
-
-async function moveToHistory(id) {
-  if (!db) return;
-  await db.collection("requests").doc(id).set({ status: "history" }, { merge: true });
-}
-
-async function clearNowPlaying(id) {
-  if (!db) return;
-  await db.collection("requests").doc(id).set({ status: "new" }, { merge: true });
-}
-
-
-function setView(mode) {
-  els.showFullBtn.classList.toggle("active", mode === "full");
-  els.showQueueBtn.classList.toggle("active", mode === "queue");
-  els.djSetupSection.classList.toggle("hidden", mode === "queue");
-}
-
-window.moveRequest = moveRequest;
-window.deleteRequest = deleteRequest;
-window.respondToRequest = respondToRequest;
-window.markNowPlaying = markNowPlaying;
-window.moveToHistory = moveToHistory;
-window.loadEventById = loadEventById;
-window.copyEventLinkById = copyEventLinkById;
-window.clearNowPlaying = clearNowPlaying;
-
-els.saveEventBtn.addEventListener("click", () => saveEvent(false));
-els.setLiveNowBtn.addEventListener("click", () => saveEvent(true));
-els.showFullBtn.addEventListener("click", () => setView("full"));
-els.showQueueBtn.addEventListener("click", () => setView("queue"));
-els.copyLinkBtn.addEventListener("click", copyLink);
-els.downloadQrBtn.addEventListener("click", openQrImage);
-els.openFlyerBtn.addEventListener("click", openFlyerView);
-els.loadLiveBtn.addEventListener("click", loadActiveEvent);
-els.newEventBtn.addEventListener("click", blankEventForm);
-els.filterAllBtn.addEventListener("click", () => { currentFilter = "all"; renderQueue(currentRequests); });
-els.filterNewBtn.addEventListener("click", () => { currentFilter = "new"; renderQueue(currentRequests); });
-els.filterTippedBtn.addEventListener("click", () => { currentFilter = "tipped"; renderQueue(currentRequests); });
-els.filterDuplicateBtn.addEventListener("click", () => { currentFilter = "duplicate"; renderQueue(currentRequests); });
-els.filterReturningBtn.addEventListener("click", () => { currentFilter = "returning"; renderQueue(currentRequests); });
-els.logoutBtn.addEventListener("click", async () => {
-  if (!auth) return;
-  try {
-    await auth.signOut();
-    window.location.href = "login.html";
-  } catch (err) {
-    console.error(err);
-    showStatus("Could not log out.");
-  }
-});
-
-setView("full");
-if (initFirebase()) {
-  refreshEventList(false);
-  loadActiveEvent();
-}
+function esc(t){return String(t??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function dt(v){const d=new Date(v); return isNaN(d) ? "Invalid date" : d.toLocaleString([], {year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}
+function status(msg,type="warning"){ els.statusBox.textContent=msg; els.statusBox.className= type==="success" ? "success" : type==="info" ? "info" : "warning"; els.statusBox.classList.remove("hidden"); }
+function hideStatus(){ els.statusBox.classList.add("hidden"); }
+function note(msg){ els.notificationBox.textContent=msg; els.notificationBox.classList.remove("hidden"); els.notificationBadge.textContent="New Request"; }
+function hideNote(){ els.notificationBox.classList.add("hidden"); els.notificationBadge.textContent="No New Requests"; }
+function configLooksFilled(){ return firebaseConfig.apiKey!=="PASTE" && firebaseConfig.authDomain!=="PASTE" && firebaseConfig.projectId!=="PASTE" && firebaseConfig.appId!=="PASTE"; }
+function getRequesterLink(){ if(!activeEventId) return ""; const u=new URL("request.html", window.location.href); u.searchParams.set("event", activeEventId); return u.toString(); }
+function getQrUrl(){ const l=getRequesterLink(); return l ? `https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=20&data=${encodeURIComponent(l)}` : ""; }
+function eventStatus(e){ if(!e||!e.startAt||!e.endAt) return "draft"; const now=Date.now(); if(now<e.startAt) return "upcoming"; if(now>e.endAt) return "ended"; return "live"; }
+function blankEventForm(){ activeEventId=null; currentEventData=null; currentRequests=[]; ["eventName","eventVenue","eventDate","eventStart","eventEnd","djName","tipLinkVenmo","tipLinkPaypal"].forEach(id=>els[id].value=""); els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.recurrenceMode.value="none"; els.eventLink.value="Create an event first"; els.qrImage.removeAttribute("src"); els.flyerQrImage.removeAttribute("src"); els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>'; renderQueue([]); renderHistory([]); els.nowPlayingBox.textContent="Nothing marked as now playing yet."; }
+function eventFromInputs(forceLive=false){ let date=els.eventDate.value, startTime=els.eventStart.value, endTime=els.eventEnd.value; if(forceLive){ const now=new Date(); const start=new Date(now.getTime()-3600000); const end=new Date(now.getTime()+7200000); date=now.toISOString().slice(0,10); startTime=start.toTimeString().slice(0,5); endTime=end.toTimeString().slice(0,5);} if(!els.eventName.value.trim()||!els.eventVenue.value.trim()||!date||!startTime||!endTime) return null; return { name:els.eventName.value.trim(), venue:els.eventVenue.value.trim(), djName:els.djName.value.trim(), date, startTime, endTime, startAt:new Date(`${date}T${startTime}`).getTime(), endAt:new Date(`${date}T${endTime}`).getTime(), active:true, ownerUid:currentUser.uid, ownerEmail:currentUser.email||"", requestLimitMinutes:Number(els.requestLimitMinutes.value||0), cutoffMinutes:Number(els.cutoffMinutes.value||0), flagReturningRequesters:!!els.flagReturningRequesters.checked, emailRequired:!!els.emailRequired.checked, recurrenceMode:els.recurrenceMode.value, tipLinkVenmo:els.tipLinkVenmo.value.trim(), tipLinkPaypal:els.tipLinkPaypal.value.trim(), updatedAt:Date.now() }; }
+function renderEvent(eventId,e){ activeEventId=eventId; currentEventData=e; els.eventName.value=e.name||""; els.eventVenue.value=e.venue||""; els.djName.value=e.djName||""; els.eventDate.value=e.date||""; els.eventStart.value=e.startTime||""; els.eventEnd.value=e.endTime||""; els.requestLimitMinutes.value=String(e.requestLimitMinutes||0); els.cutoffMinutes.value=String(e.cutoffMinutes||0); els.flagReturningRequesters.checked=e.flagReturningRequesters!==false; els.emailRequired.checked=e.emailRequired!==false; els.recurrenceMode.value=e.recurrenceMode||"none"; els.tipLinkVenmo.value=e.tipLinkVenmo||""; els.tipLinkPaypal.value=e.tipLinkPaypal||""; const s=eventStatus(e); const badgeClass=s==="live"?"badge live":(s==="ended"?"badge closed":"badge"); const badgeText=s==="live"?"Live Now":(s==="ended"?"Ended":"Upcoming"); const settings=[(e.requestLimitMinutes?`Limit: every ${e.requestLimitMinutes} min`:"Limit: none"), (e.cutoffMinutes?`Cutoff: ${e.cutoffMinutes} min before end`:"Cutoff: none"), (e.emailRequired!==false?"Email: required":"Email: optional")].join(" · "); els.activeEventBanner.innerHTML=`<div><h3>${esc(e.name||"Untitled Event")}</h3><div class="meta">${esc(e.venue||"No venue")}<br>DJ: ${esc(e.djName||"Not set")}<br>${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add date/time"}<br>${esc(settings)}</div></div><span class="${badgeClass}">${badgeText}</span>`; const link=getRequesterLink(); els.eventLink.value=link||"Create an event first"; const qr=getQrUrl(); if(qr){ els.qrImage.src=qr; els.flyerQrImage.src=qr; els.qrCaption.textContent=e.name||"QR ready"; els.flyerTitle.textContent="Live Requests"; els.flyerMeta.textContent=`${e.name||""} • ${e.venue||""}`; } }
+function renderEventList(){ if(!currentEventList.length){ els.eventList.innerHTML='<div class="empty">No events yet.</div>'; return; } els.eventList.innerHTML=currentEventList.map(e=>`<div class="event-item"><div><strong>${esc(e.name||"Untitled Event")}</strong><div class="helper">${dt(e.startAt||0)} · ${esc(e.venue||"")}</div></div><div class="row"><button class="tiny-btn" onclick="loadEventById('${e.id}')" type="button">Load</button></div></div>`).join(""); }
+function filterRequests(requests){ if(currentFilter==="new") return requests.filter(r=>(r.status||"new")==="new"); if(currentFilter==="tipped") return requests.filter(r=>Number(r.tip||0)>0); if(currentFilter==="duplicate") return requests.filter(r=>r.isDuplicate); if(currentFilter==="returning") return requests.filter(r=>r.returningRequester); return requests; }
+function sortQueue(requests){ return [...requests].sort((a,b)=>{ const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1; const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1; const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip; if((a.sortOrder??999999)!==(b.sortOrder??999999)) return (a.sortOrder??999999)-(b.sortOrder??999999); return (a.createdAt??0)-(b.createdAt??0); }); }
+async function syncPublicQueue(){ if(!db || !activeEventId) return; const batch=db.batch(); const active=sortQueue(currentRequests).filter(r=>(r.status||"new")!=="history"); active.forEach((req,idx)=>{ batch.set(db.collection("queue_public").doc(req.id), { eventId:activeEventId, artist:req.artist||"", track:req.track||"", tip:Number(req.tip||0), status:req.status||"new", isDuplicate:!!req.isDuplicate, position:idx+1, requesterKey:req.requesterKey||"", response:req.response||"", limitOverride:!!req.limitOverride, createdAt:req.createdAt||Date.now(), updatedAt:Date.now() }, {merge:true}); }); const hist=currentRequests.filter(r=>(r.status||"new")==="history"); hist.forEach((req)=>{ batch.set(db.collection("queue_public").doc(req.id), { eventId:activeEventId, artist:req.artist||"", track:req.track||"", tip:Number(req.tip||0), status:"history", isDuplicate:!!req.isDuplicate, position:0, requesterKey:req.requesterKey||"", response:req.response||"", limitOverride:!!req.limitOverride, createdAt:req.createdAt||Date.now(), updatedAt:Date.now() }, {merge:true}); }); await batch.commit(); }
+function renderQueue(requests){ const visible=filterRequests(sortQueue(requests).filter(r=>(r.status||"new")!=="history")); els.requestCountBadge.textContent=`${requests.filter(r=>(r.status||"new")!=="history").length} Requests`; if(!visible.length){ els.queueList.innerHTML='<div class="empty">No requests in this view.</div>'; return; } els.queueList.innerHTML=visible.map((req,idx)=>`<div class="request-card"><div class="request-head"><div class="request-title"><strong>${esc(req.artist)}</strong><strong style="font-size:15px; font-weight:600; color:#d5d9e6;">${esc(req.track)}</strong><div class="request-sub">Requested by ${esc(req.name)}${req.email ? ` · ${esc(req.email)}` : ""}<br>${(req.status||"new")==="now_playing" ? "Now Playing" : `Queue Position ${idx+1}`}</div><div class="request-flags">${Number(req.tip||0)>0 ? `<span class="badge tip">Tipped $${Number(req.tip||0)}</span>` : ``}${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}${req.returningRequester ? `<span class="badge repeat">Past requester (${req.returningRequesterCount||1})</span>` : ``}${req.limitOverride ? `<span class="badge">Override granted</span>` : ``}</div></div></div>${req.response ? `<div class="card" style="padding:10px 12px; border-radius:12px; background:#101723;"><strong style="font-size:12px; color:#9bc5ff;">DJ Response</strong><div style="margin-top:4px; font-size:14px;">${esc(req.response)}</div></div>` : ""}<div class="request-actions"><button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Move Up</button><button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Move Down</button><button class="tiny-btn" onclick="markNowPlaying('${req.id}')" type="button">Now Playing</button><button class="tiny-btn" onclick="moveToHistory('${req.id}')" type="button">Move to History</button><select class="action-select" onchange="presetRespond('${req.id}', this.value)"><option value="">Quick Response</option><option value="unavailable">Does not have song</option><option value="soon">Song coming soon</option><option value="great">Great choice</option><option value="theme">Doesn't fit theme</option><option value="custom">Custom…</option></select><button class="danger-btn" style="padding:7px 10px; font-size:12px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button></div></div>`).join(""); const nowPlaying=requests.find(r=>(r.status||"new")==="now_playing"); els.nowPlayingBox.textContent=nowPlaying ? `${nowPlaying.artist} — ${nowPlaying.track}` : "Nothing marked as now playing yet."; }
+function renderHistory(requests){ const hist=sortQueue(requests).filter(r=>(r.status||"new")==="history"); if(!hist.length){ els.historyList.innerHTML='<div class="helper">Nothing in history yet.</div>'; return; } els.historyList.innerHTML=hist.map(r=>`<div class="history-item"><strong>${esc(r.artist)}</strong> — ${esc(r.track)}</div>`).join(""); }
+async function refreshEventList(selectNewest=false){ if(!db || !currentUser) return; const snap=await db.collection("events").where("ownerUid","==",currentUser.uid).get(); currentEventList=snap.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>(b.startAt||0)-(a.startAt||0)); renderEventList(); if(selectNewest && currentEventList.length) loadEventById(currentEventList[0].id); }
+async function loadActiveEvent(){ await refreshEventList(false); if(currentEventList.length) loadEventById(currentEventList[0].id); else status("No events found yet. Create one first."); }
+async function loadEventById(id){ if(!db) return; const doc=await db.collection("events").doc(id).get(); if(!doc.exists) return; renderEvent(doc.id, doc.data()); listenRequests(); status("Event loaded.","success"); }
+async function saveEvent(forceLive=false){ if(!db || !currentUser) return; const data=eventFromInputs(forceLive); if(!data){ status("Please fill in event name, venue, date, start time, and end time."); return; } if(!activeEventId) activeEventId="event_"+Date.now(); await db.collection("events").doc(activeEventId).set(data,{merge:true}); const recur=data.recurrenceMode||"none"; if(recur!=="none"){ const total=Number(recur.split("_")[1]||0); for(let i=2;i<=total;i++){ const start=new Date(data.startAt+(i-1)*7*24*60*60*1000); const end=new Date(data.endAt+(i-1)*7*24*60*60*1000); const recurId=`${activeEventId}_r${i}`; await db.collection("events").doc(recurId).set({...data, date:start.toISOString().slice(0,10), startTime:start.toTimeString().slice(0,5), endTime:end.toTimeString().slice(0,5), startAt:start.getTime(), endAt:end.getTime(), recurrenceMode:"none", recurringParentId:activeEventId},{merge:true}); } } renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status("Event saved live.","success"); }
+function listenRequests(){ if(!db || !activeEventId) return; if(unsubscribeRequests) unsubscribeRequests(); unsubscribeRequests=db.collection("requests_private").where("eventId","==",activeEventId).onSnapshot(async snapshot=>{ const adds=snapshot.docChanges().filter(c=>c.type==="added"); currentRequests=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})); renderQueue(currentRequests); renderHistory(currentRequests); await syncPublicQueue(); if(adds.length){ const latest=adds[adds.length-1].doc.data(); let msg=`New request: ${latest.artist} — ${latest.track} from ${latest.name}`; if(currentEventData?.flagReturningRequesters && latest.returningRequester) msg += ` · returning requester (${latest.returningRequesterCount||1} past requests)`; if(latest.isDuplicate) msg += " · duplicate request"; if(Number(latest.tip||0)>0) msg += ` · tipped $${Number(latest.tip||0)}`; note(msg);} else hideNote(); }); }
+async function moveRequest(id,direction){ const active=sortQueue(currentRequests).filter(r=>(r.status||"new")!=="history"); const idx=active.findIndex(r=>r.id===id); if(idx<0) return; const swapWith=idx+direction; if(swapWith<0 || swapWith>=active.length) return; const [item]=active.splice(idx,1); active.splice(swapWith,0,item); const batch=db.batch(); active.forEach((req,i)=>batch.set(db.collection("requests_private").doc(req.id),{sortOrder:i},{merge:true})); await batch.commit(); }
+async function deleteRequest(id){ if(!db) return; await db.collection("requests_private").doc(id).delete(); await db.collection("queue_public").doc(id).delete(); }
+async function markNowPlaying(id){ const batch=db.batch(); currentRequests.filter(r=>(r.status||"new")==="now_playing").forEach(r=>batch.set(db.collection("requests_private").doc(r.id),{status:"new"},{merge:true})); batch.set(db.collection("requests_private").doc(id),{status:"now_playing"},{merge:true}); await batch.commit(); }
+async function moveToHistory(id){ await db.collection("requests_private").doc(id).set({status:"history"},{merge:true}); }
+async function presetRespond(id,presetKey){ if(!presetKey) return; if(presetKey==="custom"){ const reply=prompt("Response to requester:"); if(reply===null) return; await db.collection("requests_private").doc(id).set({response:reply.trim()},{merge:true}); return; } const preset=PRESET_RESPONSES[presetKey]; if(!preset) return; const patch={response:preset.label}; if(preset.overrideLimit) patch.limitOverride=true; await db.collection("requests_private").doc(id).set(patch,{merge:true}); }
+async function copyLink(){ const link=getRequesterLink(); if(!link){ alert("Create an event first."); return; } try{ await navigator.clipboard.writeText(link); status("Request link copied.","success"); }catch(e){ prompt("Copy this link:",link); } }
+function openQrImage(){ const qr=getQrUrl(); if(!qr){ alert("Create an event first."); return; } window.open(qr,"_blank"); }
+function openFlyerView(){ if(!activeEventId){ alert("Create an event first."); return; } const qr=getQrUrl(); const name=els.eventName.value||"Event"; const venue=els.eventVenue.value||""; const flyerHtml=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${esc(name)} QR Flyer</title><style>body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}.card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}.eyebrow{font-size:18px;font-weight:800;letter-spacing:.12em;color:#555;margin-bottom:8px}.title{font-size:42px;font-weight:900;line-height:1.05;margin-bottom:10px}.meta{font-size:20px;color:#444;margin-bottom:26px;line-height:1.45}img{width:min(420px,86vw);height:auto}.footer{margin-top:20px;font-size:20px;font-weight:700}.link{margin-top:12px;font-size:12px;color:#666;word-break:break-all}</style></head><body><div class="card"><div class="eyebrow">LIVE REQUESTS</div><div class="title">${esc(name)}</div><div class="meta">${esc(venue)}</div><img src="${qr}" alt="QR code" /><div class="footer">Open your camera and scan</div><div class="link">${esc(getRequesterLink())}</div></div></body></html>`; const win=window.open("", "_blank"); if(!win) return; win.document.open(); win.document.write(flyerHtml); win.document.close(); }
+function setView(mode){ els.showFullBtn.classList.toggle("active",mode==="full"); els.showQueueBtn.classList.toggle("active",mode==="queue"); els.djSetupSection.classList.toggle("hidden",mode==="queue"); }
+function initFirebase(){ if(!configLooksFilled()){ status("Paste your Firebase values into dj.html first."); return false; } try{ firebase.initializeApp(firebaseConfig); db=firebase.firestore(); auth=firebase.auth(); hideStatus(); auth.onAuthStateChanged(async (user)=>{ if(!user){ window.location.href="login.html"; return; } if(!user.emailVerified){ await auth.signOut(); window.location.href="login.html"; return; } currentUser=user; els.accountEmail.textContent=`Signed in as ${user.email||""}`; await db.collection("users").doc(user.uid).set({ email:user.email||"", emailVerified:user.emailVerified, lastLoginAt:Date.now() }, {merge:true}); await loadActiveEvent(); }); return true; } catch(err){ console.error(err); status("Firebase could not start. Double-check the values you pasted into dj.html."); return false; } }
+window.loadEventById=loadEventById; window.moveRequest=moveRequest; window.deleteRequest=deleteRequest; window.markNowPlaying=markNowPlaying; window.moveToHistory=moveToHistory; window.presetRespond=presetRespond;
+els.saveEventBtn.addEventListener("click",()=>saveEvent(false)); els.setLiveNowBtn.addEventListener("click",()=>saveEvent(true)); els.showFullBtn.addEventListener("click",()=>setView("full")); els.showQueueBtn.addEventListener("click",()=>setView("queue")); els.copyLinkBtn.addEventListener("click",copyLink); els.downloadQrBtn.addEventListener("click",openQrImage); els.openFlyerBtn.addEventListener("click",openFlyerView); els.loadLiveBtn.addEventListener("click",loadActiveEvent); els.newEventBtn.addEventListener("click",blankEventForm); els.logoutBtn.addEventListener("click",async()=>{ if(auth){ await auth.signOut(); window.location.href="login.html"; } }); els.filterAllBtn.addEventListener("click",()=>{ currentFilter="all"; renderQueue(currentRequests); }); els.filterNewBtn.addEventListener("click",()=>{ currentFilter="new"; renderQueue(currentRequests); }); els.filterTippedBtn.addEventListener("click",()=>{ currentFilter="tipped"; renderQueue(currentRequests); }); els.filterDuplicateBtn.addEventListener("click",()=>{ currentFilter="duplicate"; renderQueue(currentRequests); }); els.filterReturningBtn.addEventListener("click",()=>{ currentFilter="returning"; renderQueue(currentRequests); });
+blankEventForm(); setView("full"); initFirebase();
 </script>
 </body>
 </html>
