@@ -22,15 +22,24 @@
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
     input,select{width:100%;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;padding:12px 13px;font-size:15px;outline:none}
     .checkbox-row{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3040;background:#0f1219;color:var(--text);border-radius:12px;min-height:48px}.checkbox-row input{width:auto;margin:0}
-    .row{display:flex;gap:10px;flex-wrap:wrap}.primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}.primary-btn{background:var(--green);color:#08100b}.ghost-btn{background:#1a1f2a;color:var(--text);border:1px solid #2c3345}.danger-btn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}.tiny-btn{padding:7px 10px;border-radius:10px;font-size:12px;background:#1b202b;color:var(--text);border:1px solid #2c3345}
+    .row{display:flex;gap:10px;flex-wrap:wrap}.primary-btn,.ghost-btn,.danger-btn{padding:12px 14px;border-radius:12px;font-size:14px}.primary-btn{background:var(--green);color:#08100b}.ghost-btn{background:#1a1f2a;color:var(--text);border:1px solid #2c3345}.danger-btn{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}.tiny-btn{padding:6px 8px;border-radius:9px;font-size:11px;background:#1b202b;color:var(--text);border:1px solid #2c3345}.action-select{padding:6px 8px;border-radius:9px;font-size:11px;background:#1b202b;color:var(--text);border:1px solid #2c3345;width:auto;min-width:132px}
     .event-banner{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px;border:1px solid #263246;background:linear-gradient(180deg,rgba(124,199,255,.08),rgba(61,220,132,.05));border-radius:14px;margin-bottom:16px;flex-wrap:wrap}
     .event-banner h3{margin:0;font-size:17px}.event-banner .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
     .badge{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#121826;border:1px solid #263246;color:#d6ecff;font-size:12px;font-weight:700;white-space:nowrap}
     .badge.live{color:#b9ffd5;border-color:#1f6f45;background:#0f1b15}.badge.closed{color:#ffcdcd;border-color:#70303a;background:#181014}.badge.tip{color:#ffeab3;border-color:#6e5a18;background:#1c1607}.badge.repeat{color:#ffd6ff;border-color:#6f3577;background:#180d1a}.badge.dup{color:#ffe1c2;border-color:#7d4b21;background:#1b1208}
     .card{background:#11161f;border:1px solid #272f3f;border-radius:18px;padding:15px}.card h3{margin:0 0 8px;font-size:16px}.helper{font-size:12px;color:var(--muted);line-height:1.5}
-    .split-stack{display:grid;gap:18px}.request-list{display:grid;gap:12px}.request-card{border:1px solid #283041;background:#0f131b;border-radius:16px;padding:14px}
-    .request-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap}.request-title{display:flex;flex-direction:column;gap:4px;min-width:0}.request-title strong{font-size:17px;line-height:1.2;word-break:break-word}.request-sub{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word}
-    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.success,.warning,.info{border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5}.success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}.warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}.info{color:#d2e8ff;background:#101b26;border:1px solid #2b4868}
+    .split-stack{display:grid;gap:18px}.request-list{display:grid;gap:8px}.request-card{border:1px solid #283041;background:#0f131b;border-radius:14px;padding:10px}
+    .request-card.dragging{opacity:.45;border-color:#3ddc84}
+    .request-card.drag-over{outline:2px dashed #3ddc84;outline-offset:2px}
+    .request-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+    .request-title{display:grid;gap:3px;min-width:0}
+    .request-line-1{display:flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap}
+    .request-line-1 strong{font-size:15px;line-height:1.15;word-break:break-word}
+    .request-line-2,.request-line-3{color:var(--muted);font-size:12px;line-height:1.35;word-break:break-word}
+    .request-line-3{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .drag-handle{cursor:grab;padding:6px 8px;border:1px solid #2c3345;border-radius:10px;background:#141923;color:#9ba3b7;font-size:12px;user-select:none}
+    .drag-handle:active{cursor:grabbing}
+    .request-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.success,.warning,.info{border-radius:12px;padding:12px 13px;font-size:14px;line-height:1.5}.success{color:#bff7d5;background:#0f1b14;border:1px solid #246943}.warning{color:#ffe6ae;background:#1d1709;border:1px solid #72581b}.info{color:#d2e8ff;background:#101b26;border:1px solid #2b4868}
     .hidden{display:none!important}.empty{border:1px dashed #31384a;padding:24px;border-radius:16px;color:var(--muted);text-align:center;background:rgba(255,255,255,.02)}
     .qr-wrap{display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start;margin-top:14px}.qr-card{background:#fff;color:#111;border-radius:18px;padding:14px;display:grid;gap:10px;justify-items:center;align-content:start;min-height:316px}.qr-card img{width:200px;height:200px;object-fit:contain;border-radius:10px;background:#fff}
     .flyer-card{background:#10151e;border:1px solid #283246;border-radius:18px;padding:18px;display:grid;gap:12px}.flyer-preview{background:#fff;color:#111;border-radius:18px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center}.flyer-preview .big{font-size:28px;font-weight:900;letter-spacing:.3px}.flyer-preview .small{color:#4a4a4a;font-size:14px;line-height:1.45}.flyer-preview img{width:220px;height:220px;object-fit:contain}.flyer-actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -191,7 +200,58 @@ function renderEventList(){ if(!currentEventList.length){ els.eventList.innerHTM
 function filterRequests(requests){ if(currentFilter==="new") return requests.filter(r=>(r.status||"new")==="new"); if(currentFilter==="tipped") return requests.filter(r=>Number(r.tip||0)>0); if(currentFilter==="duplicate") return requests.filter(r=>r.isDuplicate); if(currentFilter==="returning") return requests.filter(r=>r.returningRequester); return requests; }
 function sortQueue(requests){ return [...requests].sort((a,b)=>{ const aHist=(a.status||"new")==="history", bHist=(b.status||"new")==="history"; if(aHist!==bHist) return aHist?1:-1; const aPlay=(a.status||"new")==="now_playing", bPlay=(b.status||"new")==="now_playing"; if(aPlay!==bPlay) return aPlay?-1:1; const aTip=Number(a.tip||0)>0?0:1, bTip=Number(b.tip||0)>0?0:1; if(aTip!==bTip) return aTip-bTip; if((a.sortOrder??999999)!==(b.sortOrder??999999)) return (a.sortOrder??999999)-(b.sortOrder??999999); return (a.createdAt??0)-(b.createdAt??0); }); }
 async function syncPublicQueue(){ if(!db || !activeEventId) return; const batch=db.batch(); const active=sortQueue(currentRequests).filter(r=>(r.status||"new")!=="history"); active.forEach((req,idx)=>{ batch.set(db.collection("queue_public").doc(req.id), { eventId:activeEventId, artist:req.artist||"", track:req.track||"", tip:Number(req.tip||0), status:req.status||"new", isDuplicate:!!req.isDuplicate, position:idx+1, requesterKey:req.requesterKey||"", response:req.response||"", limitOverride:!!req.limitOverride, createdAt:req.createdAt||Date.now(), updatedAt:Date.now() }, {merge:true}); }); const hist=currentRequests.filter(r=>(r.status||"new")==="history"); hist.forEach((req)=>{ batch.set(db.collection("queue_public").doc(req.id), { eventId:activeEventId, artist:req.artist||"", track:req.track||"", tip:Number(req.tip||0), status:"history", isDuplicate:!!req.isDuplicate, position:0, requesterKey:req.requesterKey||"", response:req.response||"", limitOverride:!!req.limitOverride, createdAt:req.createdAt||Date.now(), updatedAt:Date.now() }, {merge:true}); }); await batch.commit(); }
-function renderQueue(requests){ const visible=filterRequests(sortQueue(requests).filter(r=>(r.status||"new")!=="history")); els.requestCountBadge.textContent=`${requests.filter(r=>(r.status||"new")!=="history").length} Requests`; if(!visible.length){ els.queueList.innerHTML='<div class="empty">No requests in this view.</div>'; return; } els.queueList.innerHTML=visible.map((req,idx)=>`<div class="request-card"><div class="request-head"><div class="request-title"><strong>${esc(req.artist)}</strong><strong style="font-size:15px; font-weight:600; color:#d5d9e6;">${esc(req.track)}</strong><div class="request-sub">Requested by ${esc(req.name)}${req.email ? ` · ${esc(req.email)}` : ""}<br>${(req.status||"new")==="now_playing" ? "Now Playing" : `Queue Position ${idx+1}`}</div><div class="request-flags">${Number(req.tip||0)>0 ? `<span class="badge tip">Tipped $${Number(req.tip||0)}</span>` : ``}${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}${req.returningRequester ? `<span class="badge repeat">Past requester (${req.returningRequesterCount||1})</span>` : ``}${req.limitOverride ? `<span class="badge">Override granted</span>` : ``}</div></div></div>${req.response ? `<div class="card" style="padding:10px 12px; border-radius:12px; background:#101723;"><strong style="font-size:12px; color:#9bc5ff;">DJ Response</strong><div style="margin-top:4px; font-size:14px;">${esc(req.response)}</div></div>` : ""}<div class="request-actions"><button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Move Up</button><button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Move Down</button><button class="tiny-btn" onclick="markNowPlaying('${req.id}')" type="button">Now Playing</button><button class="tiny-btn" onclick="moveToHistory('${req.id}')" type="button">Move to History</button><select class="action-select" onchange="presetRespond('${req.id}', this.value)"><option value="">Quick Response</option><option value="unavailable">Does not have song</option><option value="soon">Song coming soon</option><option value="great">Great choice</option><option value="theme">Doesn't fit theme</option><option value="custom">Custom…</option></select><button class="danger-btn" style="padding:7px 10px; font-size:12px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button></div></div>`).join(""); const nowPlaying=requests.find(r=>(r.status||"new")==="now_playing"); els.nowPlayingBox.textContent=nowPlaying ? `${nowPlaying.artist} — ${nowPlaying.track}` : "Nothing marked as now playing yet."; }
+function renderQueue(requests){
+  const visible = filterRequests(sortQueue(requests).filter(r => (r.status||"new") !== "history"));
+  const activeQueue = sortQueue(requests).filter(r => (r.status||"new") !== "history");
+  els.requestCountBadge.textContent = `${activeQueue.length} Requests`;
+  if(!visible.length){
+    els.queueList.innerHTML = '<div class="empty">No requests in this view.</div>';
+  } else {
+    els.queueList.innerHTML = visible.map((req) => {
+      const overallIndex = activeQueue.findIndex(r => r.id === req.id) + 1;
+      return `<div class="request-card" draggable="true" data-request-id="${req.id}">
+        <div class="request-main">
+          <div class="request-title">
+            <div class="request-line-1">
+              <strong>${esc(req.artist)}</strong>
+              <span style="color:#6f778b;">—</span>
+              <strong style="font-weight:600;color:#d5d9e6;">${esc(req.track)}</strong>
+            </div>
+            <div class="request-line-2">
+              ${esc(req.name)}${req.email ? ` · ${esc(req.email)}` : ""} · ${(req.status||"new")==="now_playing" ? "Now Playing" : `#${overallIndex}`}
+            </div>
+            <div class="request-line-3">
+              ${Number(req.tip||0)>0 ? `<span class="badge tip">Tip $${Number(req.tip||0)}</span>` : ``}
+              ${req.isDuplicate ? `<span class="badge dup">Duplicate</span>` : ``}
+              ${req.returningRequester ? `<span class="badge repeat">Past requester</span>` : ``}
+              ${req.limitOverride ? `<span class="badge">Override</span>` : ``}
+            </div>
+            ${req.response ? `<div class="card" style="padding:8px 10px;border-radius:10px;background:#101723;margin-top:4px;"><strong style="font-size:11px;color:#9bc5ff;">DJ Response</strong><div style="margin-top:2px;font-size:12px;">${esc(req.response)}</div></div>` : ""}
+          </div>
+          <div class="drag-handle" title="Drag to reorder">Drag</div>
+        </div>
+        <div class="request-actions">
+          <button class="tiny-btn" onclick="moveRequest('${req.id}', -1)" type="button">Up</button>
+          <button class="tiny-btn" onclick="moveRequest('${req.id}', 1)" type="button">Down</button>
+          <button class="tiny-btn" onclick="markNowPlaying('${req.id}')" type="button">Play</button>
+          <button class="tiny-btn" onclick="moveToHistory('${req.id}')" type="button">Done</button>
+          <select class="action-select" onchange="presetRespond('${req.id}', this.value)">
+            <option value="">Response</option>
+            <option value="unavailable">No song</option>
+            <option value="soon">Coming soon</option>
+            <option value="great">Great choice</option>
+            <option value="theme">Wrong theme</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <button class="danger-btn" style="padding:6px 8px;font-size:11px;" onclick="deleteRequest('${req.id}')" type="button">Delete</button>
+        </div>
+      </div>`;
+    }).join("");
+    setupDragAndDrop();
+  }
+  const nowPlaying = requests.find(r => (r.status||"new")==="now_playing");
+  els.nowPlayingBox.textContent = nowPlaying ? `${nowPlaying.artist} — ${nowPlaying.track}` : "Nothing marked as now playing yet.";
+}
 function renderHistory(requests){ const hist=sortQueue(requests).filter(r=>(r.status||"new")==="history"); if(!hist.length){ els.historyList.innerHTML='<div class="helper">Nothing in history yet.</div>'; return; } els.historyList.innerHTML=hist.map(r=>`<div class="history-item"><strong>${esc(r.artist)}</strong> — ${esc(r.track)}</div>`).join(""); }
 async function refreshEventList(selectNewest=false){ if(!db || !currentUser) return; const snap=await db.collection("events").where("ownerUid","==",currentUser.uid).get(); currentEventList=snap.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>(b.startAt||0)-(a.startAt||0)); renderEventList(); if(selectNewest && currentEventList.length) loadEventById(currentEventList[0].id); }
 async function loadActiveEvent(){ await refreshEventList(false); if(currentEventList.length) loadEventById(currentEventList[0].id); else status("No events found yet. Create one first."); }
@@ -207,6 +267,48 @@ async function copyLink(){ const link=getRequesterLink(); if(!link){ alert("Crea
 function openQrImage(){ const qr=getQrUrl(); if(!qr){ alert("Create an event first."); return; } window.open(qr,"_blank"); }
 function openFlyerView(){ if(!activeEventId){ alert("Create an event first."); return; } const qr=getQrUrl(); const name=els.eventName.value||"Event"; const venue=els.eventVenue.value||""; const flyerHtml=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${esc(name)} QR Flyer</title><style>body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;display:grid;place-items:center;min-height:100vh;padding:24px}.card{background:#fff;color:#111;width:min(760px,100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.15);text-align:center}.eyebrow{font-size:18px;font-weight:800;letter-spacing:.12em;color:#555;margin-bottom:8px}.title{font-size:42px;font-weight:900;line-height:1.05;margin-bottom:10px}.meta{font-size:20px;color:#444;margin-bottom:26px;line-height:1.45}img{width:min(420px,86vw);height:auto}.footer{margin-top:20px;font-size:20px;font-weight:700}.link{margin-top:12px;font-size:12px;color:#666;word-break:break-all}</style></head><body><div class="card"><div class="eyebrow">LIVE REQUESTS</div><div class="title">${esc(name)}</div><div class="meta">${esc(venue)}</div><img src="${qr}" alt="QR code" /><div class="footer">Open your camera and scan</div><div class="link">${esc(getRequesterLink())}</div></div></body></html>`; const win=window.open("", "_blank"); if(!win) return; win.document.open(); win.document.write(flyerHtml); win.document.close(); }
 function setView(mode){ els.showFullBtn.classList.toggle("active",mode==="full"); els.showQueueBtn.classList.toggle("active",mode==="queue"); els.djSetupSection.classList.toggle("hidden",mode==="queue"); }
+
+let draggedRequestId = null;
+
+function setupDragAndDrop(){
+  const cards = Array.from(document.querySelectorAll(".request-card[draggable='true']"));
+  cards.forEach(card => {
+    card.addEventListener("dragstart", () => {
+      draggedRequestId = card.dataset.requestId;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      cards.forEach(c => c.classList.remove("drag-over"));
+    });
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if(card.dataset.requestId !== draggedRequestId) card.classList.add("drag-over");
+    });
+    card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
+    card.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      const targetId = card.dataset.requestId;
+      if(!draggedRequestId || !targetId || draggedRequestId === targetId) return;
+      await reorderRequestsByDrag(draggedRequestId, targetId);
+    });
+  });
+}
+
+async function reorderRequestsByDrag(dragId, targetId){
+  if(!db) return;
+  const active = sortQueue(currentRequests).filter(r => (r.status||"new") !== "history");
+  const from = active.findIndex(r => r.id === dragId);
+  const to = active.findIndex(r => r.id === targetId);
+  if(from < 0 || to < 0 || from === to) return;
+  const [item] = active.splice(from, 1);
+  active.splice(to, 0, item);
+  const batch = db.batch();
+  active.forEach((req, i) => batch.set(db.collection("requests_private").doc(req.id), {sortOrder:i}, {merge:true}));
+  await batch.commit();
+}
+
 function initFirebase(){ if(!configLooksFilled()){ status("Paste your Firebase values into dj.html first."); return false; } try{ firebase.initializeApp(firebaseConfig); db=firebase.firestore(); auth=firebase.auth(); hideStatus(); auth.onAuthStateChanged(async (user)=>{ if(!user){ window.location.href="login.html"; return; } if(!user.emailVerified){ await auth.signOut(); window.location.href="login.html"; return; } currentUser=user; els.accountEmail.textContent=`Signed in as ${user.email||""}`; await db.collection("users").doc(user.uid).set({ email:user.email||"", emailVerified:user.emailVerified, lastLoginAt:Date.now() }, {merge:true}); await loadActiveEvent(); }); return true; } catch(err){ console.error(err); status("Firebase could not start. Double-check the values you pasted into dj.html."); return false; } }
 window.loadEventById=loadEventById; window.moveRequest=moveRequest; window.deleteRequest=deleteRequest; window.markNowPlaying=markNowPlaying; window.moveToHistory=moveToHistory; window.presetRespond=presetRespond;
 els.saveEventBtn.addEventListener("click",()=>saveEvent(false)); els.setLiveNowBtn.addEventListener("click",()=>saveEvent(true)); els.showFullBtn.addEventListener("click",()=>setView("full")); els.showQueueBtn.addEventListener("click",()=>setView("queue")); els.copyLinkBtn.addEventListener("click",copyLink); els.downloadQrBtn.addEventListener("click",openQrImage); els.openFlyerBtn.addEventListener("click",openFlyerView); els.loadLiveBtn.addEventListener("click",loadActiveEvent); els.newEventBtn.addEventListener("click",blankEventForm); els.logoutBtn.addEventListener("click",async()=>{ if(auth){ await auth.signOut(); window.location.href="login.html"; } }); els.filterAllBtn.addEventListener("click",()=>{ currentFilter="all"; renderQueue(currentRequests); }); els.filterNewBtn.addEventListener("click",()=>{ currentFilter="new"; renderQueue(currentRequests); }); els.filterTippedBtn.addEventListener("click",()=>{ currentFilter="tipped"; renderQueue(currentRequests); }); els.filterDuplicateBtn.addEventListener("click",()=>{ currentFilter="duplicate"; renderQueue(currentRequests); }); els.filterReturningBtn.addEventListener("click",()=>{ currentFilter="returning"; renderQueue(currentRequests); });
