@@ -244,7 +244,7 @@ function updateQueueStatus(){
   if(!lastPublicQueueId){ els.queueStatusBox.classList.add("hidden"); return; }
   const req = currentQueue.find(q => q.id===lastPublicQueueId);
   if(!req){ els.queueStatusBox.classList.add("hidden"); return; }
-  els.queueStatusBox.textContent = "Your request was recieved.";
+  els.queueStatusBox.textContent = "Your request was received.";
   els.queueStatusBox.classList.remove("hidden");
   const parts = [];
   if(req.position) parts.push(`Queue position: #${req.position}`);
@@ -414,7 +414,7 @@ async function submitRequest(){
     localStorage.setItem(responseKey(), lastPublicQueueId);
 
     showRequestSuccess(`Request sent: ${artist} — ${track}`);
-    els.queueStatusBox.textContent = "Your request was recieved.";
+    els.queueStatusBox.textContent = "Your request was received.";
     els.queueStatusBox.classList.remove("hidden");
 
     // optimistic immediate queue position

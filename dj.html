@@ -85,6 +85,26 @@
     .history-list{display:grid;gap:8px;margin-top:10px}
     .history-item{padding:10px 12px;border:1px solid #283246;border-radius:12px;background:#0f141d}
     @media (max-width:1024px){.grid-3{grid-template-columns:1fr}}
+    
+    .compact-editor-top{display:grid;gap:18px;margin-top:16px}
+    .compact-editor-bottom{display:grid;gap:18px;margin-top:18px}
+    .editor-card{background:#101723;border:1px solid #283246;border-radius:18px;padding:15px}
+    .editor-card h3{margin:0 0 12px;font-size:14px}
+    .details-grid{display:grid;gap:12px}
+    .details-grid .time-inline{display:grid;grid-template-columns:76px 82px 76px;gap:8px}
+    .compact-link-box{background:#0f1219;border:1px solid #2a3040;color:var(--text);border-radius:12px;padding:12px 13px;font-size:14px;word-break:break-all}
+    .main-qr-grid{display:grid;gap:14px}
+    .main-qr-preview{background:#fff;color:#111;border-radius:18px;padding:18px;display:grid;gap:12px;justify-items:center;text-align:center}
+    .main-qr-preview img{width:220px;height:220px;object-fit:contain}
+    .action-stack{display:grid;gap:10px;align-content:start}
+    .muted-note{font-size:12px;color:var(--muted);line-height:1.5}
+    .ghost-danger{background:#29161a;color:#ffb1b1;border:1px solid #5e2c35}
+    .hidden-support{display:none}
+    @media (min-width:1100px){
+      .compact-editor-top{grid-template-columns:1.1fr .95fr}
+      .compact-editor-bottom{grid-template-columns:.95fr 1.15fr}
+    }
+
     @media (max-width:900px){.qr-wrap,.grid-2{grid-template-columns:1fr}}
   </style>
 </head>
@@ -112,36 +132,61 @@
     </div>
 
     <div class="panel-body split-stack">
-      <div id="eventsSection">
+      
+<div id="eventsSection">
         <div class="event-banner" id="activeEventBanner">
           <div><h3>No event loaded</h3><div class="meta">Create or load one of your events to begin.</div></div>
           <span class="badge closed">No Event</span>
         </div>
 
-        <div class="grid-2">
-          <div><label for="eventName">Event name</label><input id="eventName" placeholder="Friday Night Open Format" /></div>
-          <div><label for="eventVenue">Location / venue</label><input id="eventVenue" placeholder="Club X" /></div>
-          <div><label for="startDate">Start date</label><input id="startDate" type="date" /></div>
-          <div><label>Start time</label><div class="time-row"><select id="startHour"></select><select id="startMinute"></select><select id="startAmpm"></select></div></div>
-          <div><label for="endDate">End date</label><input id="endDate" type="date" /></div>
-          <div><label>End time</label><div class="time-row"><select id="endHour"></select><select id="endMinute"></select><select id="endAmpm"></select></div></div>
-          <div><label for="djName">DJ name</label><input id="djName" placeholder="DJ Tripp" /></div>
+        <div class="compact-editor-top">
+          <div class="editor-card">
+            <h3>Event Details</h3>
+            <div class="details-grid grid-2">
+              <div><label for="eventName">Event Name</label><input id="eventName" placeholder="Friday Night Open Format" /></div>
+              <div><label for="eventVenue">Location</label><input id="eventVenue" placeholder="Club X" /></div>
+
+              <div><label for="startDate">Start Date</label><input id="startDate" type="date" /></div>
+              <div>
+                <label>Start Time</label>
+                <div class="time-inline">
+                  <select id="startHour"></select>
+                  <select id="startMinute"></select>
+                  <select id="startAmpm"></select>
+                </div>
+              </div>
+
+              <div><label for="endDate">End Date</label><input id="endDate" type="date" /></div>
+              <div>
+                <label>End Time</label>
+                <div class="time-inline">
+                  <select id="endHour"></select>
+                  <select id="endMinute"></select>
+                  <select id="endAmpm"></select>
+                </div>
+              </div>
+
+              <div><label for="djName">DJ Name</label><input id="djName" placeholder="DJ Tripp" /></div>
+            </div>
+          </div>
+
+          <div class="editor-card">
+            <h3>Request Settings</h3>
+            <div class="grid-2" style="gap:12px;">
+              <div><label for="requestLimitMinutes">Limit Per Person</label><select id="requestLimitMinutes"><option value="0">No limit</option><option value="5">1 request every 5 minutes</option><option value="10">1 request every 10 minutes</option><option value="15">1 request every 15 minutes</option><option value="30">1 request every 30 minutes</option><option value="60">1 request every 1 hour</option></select></div>
+              <div><label for="cutoffMinutes">Cutoff</label><select id="cutoffMinutes"><option value="0">No cutoff</option><option value="30">30 min before end</option><option value="60">1 hour before end</option></select></div>
+
+              <div><label>Email Required</label><div class="checkbox-row"><input id="emailRequired" type="checkbox" checked /><span>Require email on requester page</span></div></div>
+              <div><label>Returning Alerts</label><div class="checkbox-row"><input id="flagReturningRequesters" type="checkbox" checked /><span>Notify if requester has requested before</span></div></div>
+
+              <div><label>Include Tips</label><div class="checkbox-row"><input id="includeTipsInEvent" type="checkbox" checked /><span>Show Venmo / PayPal</span></div></div>
+              <div><label>Include Socials</label><div class="checkbox-row"><input id="includeSocialsInEvent" type="checkbox" checked /><span>Show social links</span></div></div>
+
+              <div><label for="recurrenceMode">Recurrence</label><select id="recurrenceMode"><option value="none">One-time event</option><option value="weekly_2">Weekly, 2 total events</option><option value="weekly_4">Weekly, 4 total events</option><option value="weekly_8">Weekly, 8 total events</option></select></div>
+            </div>
+          </div>
         </div>
 
-        <div class="settings-box">
-          <h3>Request Settings</h3>
-          <div class="grid-3">
-            <div><label for="requestLimitMinutes">Limit per person</label><select id="requestLimitMinutes"><option value="0">No limit</option><option value="5">1 request every 5 minutes</option><option value="10">1 request every 10 minutes</option><option value="15">1 request every 15 minutes</option><option value="30">1 request every 30 minutes</option><option value="60">1 request every 1 hour</option></select></div>
-            <div><label for="cutoffMinutes">Request cutoff before show ends</label><select id="cutoffMinutes"><option value="0">No cutoff</option><option value="30">30 minutes before end</option><option value="60">1 hour before end</option></select></div>
-            <div><label>Returning requester alerts</label><div class="checkbox-row"><input id="flagReturningRequesters" type="checkbox" checked /><span>Notify if requester has requested at past events</span></div></div>
-            <div><label>Email required</label><div class="checkbox-row"><input id="emailRequired" type="checkbox" checked /><span>Require email on requester page</span></div></div>
-            <div><label>Include tip links</label><div class="checkbox-row"><input id="includeTipsInEvent" type="checkbox" checked /><span>Show Venmo / PayPal on requester page</span></div></div>
-            <div><label>Include socials</label><div class="checkbox-row"><input id="includeSocialsInEvent" type="checkbox" checked /><span>Show social links on requester page</span></div></div>
-            <div><label for="recurrenceMode">Recurrence</label><select id="recurrenceMode"><option value="none">One-time event</option><option value="weekly_2">Weekly, 2 total events</option><option value="weekly_4">Weekly, 4 total events</option><option value="weekly_8">Weekly, 8 total events</option></select></div>
-</div>
-        </div>
-
-        
         <input id="tipLinkVenmo" type="hidden" />
         <input id="tipLinkPaypal" type="hidden" />
         <input id="eventInstagram" type="hidden" />
@@ -149,43 +194,42 @@
         <input id="eventFacebook" type="hidden" />
         <input id="eventWebsite" type="hidden" />
 
-        <div class="row" style="margin-top:12px;">
-          <button class="primary-btn" id="saveEventBtn" type="button">Save / Update Event</button>
-          <button class="ghost-btn" id="setLiveNowBtn" type="button">Make Event Live Now</button>
-          <button class="danger-btn" id="deleteEventBtn" type="button">Delete Loaded Event</button>
-        </div>
-
-        <div class="card" style="margin-top:14px;">
-          <h3>Requester link for QR code</h3>
-          <div class="helper">This is the public page requesters should open or scan.</div>
-          <input id="eventLink" readonly value="Create an event first" style="margin-top:10px;" />
-        </div>
-
-        <div class="qr-wrap">
-          <div class="qr-card">
-            <div style="font-weight:900; font-size:14px;">QR CODE</div>
-            <img id="qrImage" alt="Event QR code" />
-            <div id="qrCaption" style="font-size:12px; color:#555; text-align:center;">Create an event to generate the QR code.</div>
+        <div class="compact-editor-bottom">
+          <div class="editor-card">
+            <h3>Your Events</h3>
+            <div id="eventList" class="event-list"></div>
+            <button class="danger-btn" id="deleteEventBtn" type="button" style="margin-top:12px;width:100%;">Delete Current Event</button>
           </div>
-          <div class="flyer-card">
-            <h3 style="margin:0;">Screen / flyer version</h3>
-            <div class="helper">Clean QR block you can screenshot, print, or open in a separate window.</div>
-            <div class="flyer-preview"><div class="big" id="flyerTitle">Live Requests</div><img id="flyerQrImage" alt="Flyer QR code" /><div class="small" id="flyerMeta">Create an event to generate the flyer-ready QR.</div></div>
-            <div class="flyer-actions">
-              <button class="primary-btn" id="openFlyerBtn" type="button">Open Flyer View</button>
-              <button class="ghost-btn" id="downloadQrBtn" type="button">Open QR Image</button>
-              <button class="ghost-btn" id="copyLinkBtn" type="button">Copy Request Link</button>
+
+          <div class="editor-card">
+            <h3>Requester Link & QR</h3>
+            <div class="muted-note">This is the public page requesters should open or scan.</div>
+            <div id="eventLink" class="compact-link-box" style="margin-top:10px;">Create an event first</div>
+
+            <img id="qrImage" class="hidden-support" alt="Event QR code" />
+            <div id="qrCaption" class="hidden-support"></div>
+
+            <div class="main-qr-grid" style="margin-top:14px;">
+              <div class="main-qr-preview">
+                <div class="big" id="flyerTitle" style="font-size:28px;font-weight:900;letter-spacing:.3px;">Live Requests</div>
+                <img id="flyerQrImage" alt="Flyer QR code" />
+                <div class="small" id="flyerMeta" style="color:#4a4a4a;font-size:14px;line-height:1.45;">Create an event to generate the flyer-ready QR.</div>
+              </div>
+
+              <div class="action-stack">
+                <button class="primary-btn" id="saveEventBtn" type="button">Save / Update Event</button>
+                <button class="ghost-btn" id="setLiveNowBtn" type="button">Make Event Live Now</button>
+                <button class="ghost-btn" id="openFlyerBtn" type="button">Open Flyer View</button>
+                <button class="ghost-btn" id="downloadQrBtn" type="button">Open QR Image</button>
+                <button class="ghost-btn" id="copyLinkBtn" type="button">Copy Request Link</button>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="settings-box">
-          <h3>Your Events</h3>
-          <div id="eventList" class="event-list"></div>
         </div>
       </div>
 
       <div id="profileSection" class="hidden">
+
         <div class="settings-box" style="margin-top:0;">
           <h3>Profile</h3>
           <div class="grid-3">
@@ -474,7 +518,7 @@ function blankEventForm(){
   if(els.includeTipsInEvent) els.includeTipsInEvent.checked=true;
   if(els.includeSocialsInEvent) els.includeSocialsInEvent.checked=true;
   els.recurrenceMode.value="none";
-  els.eventLink.value="Create an event first";
+  els.eventLink.textContent="Create an event first";
   els.qrImage.removeAttribute("src");
   els.flyerQrImage.removeAttribute("src");
   els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>';
@@ -545,7 +589,7 @@ function renderEvent(eventId,e){
   const s=eventStatus(e); const badgeClass=s==="live"?"badge live":(s==="ended"?"badge closed":"badge"); const badgeText=s==="live"?"Live Now":(s==="ended"?"Ended":"Upcoming");
   const settings=[(e.requestLimitMinutes?`Limit: every ${e.requestLimitMinutes} min`:"Limit: none"), (e.cutoffMinutes?`Cutoff: ${e.cutoffMinutes} min before end`:"Cutoff: none"), (e.emailRequired!==false?"Email: required":"Email: optional")].join(" · ");
   els.activeEventBanner.innerHTML=`<div><h3>${esc(e.name||"Untitled Event")}</h3><div class="meta">${esc(e.venue||"No venue")}<br>DJ: ${esc(e.djName||"Not set")}<br>${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add date/time"}<br>${esc(settings)}</div></div><span class="${badgeClass}">${badgeText}</span>`;
-  const link=getRequesterLink(); els.eventLink.value=link||"Create an event first"; const qr=getQrUrl(); if(qr){ els.qrImage.src=qr; els.flyerQrImage.src=qr; els.qrCaption.textContent=e.name||"QR ready"; els.flyerTitle.textContent="Live Requests"; els.flyerMeta.textContent=`${e.name||""} • ${e.venue||""}`; }
+  const link=getRequesterLink(); els.eventLink.textContent=link||"Create an event first"; const qr=getQrUrl(); if(qr){ els.qrImage.src=qr; els.flyerQrImage.src=qr; els.qrCaption.textContent=e.name||"QR ready"; els.flyerTitle.textContent="Live Requests"; els.flyerMeta.textContent=`${e.name||""} • ${e.venue||""}`; }
 }
 
 function renderEventList(){
@@ -678,49 +722,23 @@ async function saveEvent(forceLive=false){
   renderEvent(activeEventId,data); await refreshEventList(false); listenRequests(); status(isNewEvent ? "Event created successfully." : "Event updated successfully.", "success");
 }
 
-let notificationsPrimed = false;
-let seenRequestIds = new Set();
-
 function listenRequests(){
   if(!db || !activeEventId) return;
   if(unsubscribeRequests) unsubscribeRequests();
-
-  notificationsPrimed = false;
-  seenRequestIds = new Set();
-
-  unsubscribeRequests = db.collection("requests_private")
-    .where("eventId","==",activeEventId)
-    .onSnapshot(async snapshot => {
-      const docs = snapshot.docs.map(doc => ({id:doc.id, ...doc.data()}));
-      currentRequests = docs;
-      renderQueue(currentRequests);
-      renderHistory(currentRequests);
-      await syncPublicQueue();
-
-      const currentIds = new Set(snapshot.docs.map(doc => doc.id));
-
-      snapshot.docChanges().forEach(change => {
-        if(change.type === "added"){
-          const data = change.doc.data();
-          const id = change.doc.id;
-
-          if(notificationsPrimed && !seenRequestIds.has(id)){
-            let msg = `${data.artist} — ${data.track}`;
-            if(Number(data.tip||0) > 0) msg += ` (tipped $${Number(data.tip||0)})`;
-            note(`New request: ${msg}`);
-            pushBrowserNotification(msg);
-            console.log("New request:", msg);
-          }
-        }
-      });
-
-      seenRequestIds = currentIds;
-      notificationsPrimed = true;
-
-      if(!snapshot.docChanges().some(change => change.type === "added")){
-        hideNote();
-      }
-    });
+  unsubscribeRequests=db.collection("requests_private").where("eventId","==",activeEventId).onSnapshot(async snapshot=>{
+    const adds=snapshot.docChanges().filter(c=>c.type==="added");
+    currentRequests=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+    renderQueue(currentRequests); renderHistory(currentRequests); await syncPublicQueue();
+    if(adds.length){
+      const latest=adds[adds.length-1].doc.data();
+      let msg=`New request: ${latest.artist} — ${latest.track} from ${latest.name}`;
+      if(currentEventData?.flagReturningRequesters && latest.returningRequester) msg += ` · returning requester (${latest.returningRequesterCount||1} past requests)`;
+      if(latest.isDuplicate) msg += " · duplicate request";
+      if(Number(latest.tip||0)>0) msg += ` · tipped $${Number(latest.tip||0)}`;
+      note(msg);
+      pushBrowserNotification(msg);
+    } else hideNote();
+  });
 }
 
 async function moveRequest(id,direction){
@@ -752,24 +770,12 @@ function openFlyerView(){
 
 
 async function ensureNotificationPermission(){
-  if(!("Notification" in window)){
-    console.log("Notifications not supported");
-    return "unsupported";
-  }
-  if(Notification.permission === "granted"){
-    console.log("Notifications already granted");
-    return "granted";
-  }
-  if(Notification.permission === "denied"){
-    console.log("Notifications denied");
-    return "denied";
-  }
-  try{
-    const permission = await Notification.requestPermission();
-    console.log("Permission:", permission);
-    return permission;
-  } catch(e){
-    console.error("Notification permission error:", e);
+  if(!("Notification" in window)) return "unsupported";
+  if(Notification.permission === "granted") return "granted";
+  if(Notification.permission === "denied") return "denied";
+  try {
+    return await Notification.requestPermission();
+  } catch (e) {
     return "default";
   }
 }
@@ -778,17 +784,8 @@ function pushBrowserNotification(message){
   if(!("Notification" in window)) return;
   if(Notification.permission !== "granted") return;
   try{
-    const n = new Notification("Live Requests", {
-      body: message,
-      tag: "live-request"
-    });
-    n.onclick = () => {
-      try { window.focus(); } catch(e){}
-      n.close();
-    };
-  } catch(e){
-    console.error("Notification error:", e);
-  }
+    new Notification("Live Requests", { body: message });
+  } catch(e){}
 }
 
 
