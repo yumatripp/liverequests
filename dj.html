@@ -384,7 +384,7 @@ function applyProfileDefaultsToForm(){
   if(userProfile.facebook && !els.eventFacebook.value.trim()) els.eventFacebook.value = facebookUrl(userProfile.facebook);
   if(userProfile.website && !els.eventWebsite.value.trim()) els.eventWebsite.value = userProfile.website.trim();
 }
-async async function loadUserProfile(){
+async function loadUserProfile(){
   if(!db || !currentUser) return;
   try{
     const doc = await db.collection("users").doc(currentUser.uid).get();
@@ -412,7 +412,7 @@ async async function loadUserProfile(){
     applyProfileDefaultsToForm();
   }catch(err){ console.error(err); }
 }
-async async function saveUserProfile(){
+async function saveUserProfile(){
   if(!db || !currentUser) return;
   userProfile.defaultDjName = els.defaultDjName.value.trim();
   userProfile.defaultVenue = els.defaultVenue.value.trim();
