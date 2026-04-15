@@ -377,12 +377,12 @@ function renderVenueHistory(){
 function applyProfileDefaultsToForm(){
   if(userProfile.defaultDjName && !els.djName.value.trim()) els.djName.value = userProfile.defaultDjName;
   if(userProfile.defaultVenue && !els.eventVenue.value.trim()) els.eventVenue.value = userProfile.defaultVenue;
-  if(userProfile.tipVenmo && !els.tipLinkVenmo.value.trim()) els.tipLinkVenmo.value = venmoUrl(userProfile.tipVenmo);
-  if(userProfile.tipPaypal && !els.tipLinkPaypal.value.trim()) els.tipLinkPaypal.value = paypalUrl(userProfile.tipPaypal);
-  if(userProfile.instagram && !els.eventInstagram.value.trim()) els.eventInstagram.value = instagramUrl(userProfile.instagram);
-  if(userProfile.tiktok && !els.eventTiktok.value.trim()) els.eventTiktok.value = tiktokUrl(userProfile.tiktok);
-  if(userProfile.facebook && !els.eventFacebook.value.trim()) els.eventFacebook.value = facebookUrl(userProfile.facebook);
-  if(userProfile.website && !els.eventWebsite.value.trim()) els.eventWebsite.value = userProfile.website.trim();
+  els.tipLinkVenmo.value = (els.includeTipsInEvent && els.includeTipsInEvent.checked && userProfile.tipVenmo) ? venmoUrl(userProfile.tipVenmo) : "";
+  els.tipLinkPaypal.value = (els.includeTipsInEvent && els.includeTipsInEvent.checked && userProfile.tipPaypal) ? paypalUrl(userProfile.tipPaypal) : "";
+  els.eventInstagram.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.instagram) ? instagramUrl(userProfile.instagram) : "";
+  els.eventTiktok.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.tiktok) ? tiktokUrl(userProfile.tiktok) : "";
+  els.eventFacebook.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.facebook) ? facebookUrl(userProfile.facebook) : "";
+  els.eventWebsite.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.website) ? userProfile.website.trim() : "";
 }
 async function loadUserProfile(){
   if(!db || !currentUser) return;
@@ -448,12 +448,12 @@ async function saveUserProfile(){
 function useProfileDefaultsForNewEvent(){
   if(userProfile.defaultDjName) els.djName.value = userProfile.defaultDjName;
   if(userProfile.defaultVenue) els.eventVenue.value = userProfile.defaultVenue;
-  if(userProfile.tipVenmo) els.tipLinkVenmo.value = venmoUrl(userProfile.tipVenmo);
-  if(userProfile.tipPaypal) els.tipLinkPaypal.value = paypalUrl(userProfile.tipPaypal);
-  if(userProfile.instagram) els.eventInstagram.value = instagramUrl(userProfile.instagram);
-  if(userProfile.tiktok) els.eventTiktok.value = tiktokUrl(userProfile.tiktok);
-  if(userProfile.facebook) els.eventFacebook.value = facebookUrl(userProfile.facebook);
-  if(userProfile.website) els.eventWebsite.value = userProfile.website.trim();
+  els.tipLinkVenmo.value = (els.includeTipsInEvent && els.includeTipsInEvent.checked && userProfile.tipVenmo) ? venmoUrl(userProfile.tipVenmo) : "";
+  els.tipLinkPaypal.value = (els.includeTipsInEvent && els.includeTipsInEvent.checked && userProfile.tipPaypal) ? paypalUrl(userProfile.tipPaypal) : "";
+  els.eventInstagram.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.instagram) ? instagramUrl(userProfile.instagram) : "";
+  els.eventTiktok.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.tiktok) ? tiktokUrl(userProfile.tiktok) : "";
+  els.eventFacebook.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.facebook) ? facebookUrl(userProfile.facebook) : "";
+  els.eventWebsite.value = (els.includeSocialsInEvent && els.includeSocialsInEvent.checked && userProfile.website) ? userProfile.website.trim() : "";
   status("Profile defaults applied to the event.", "success");
 }
 function updateVenueHistoryFromEvent(venue){
@@ -467,11 +467,22 @@ function updateVenueHistoryFromEvent(venue){
 function blankEventForm(){
   activeEventId=null; currentEventData=null; currentRequests=[];
   ["eventName","eventVenue","startDate","endDate","djName","tipLinkVenmo","tipLinkPaypal","eventInstagram","eventTiktok","eventFacebook","eventWebsite"].forEach(id=>els[id].value="");
-  els.requestLimitMinutes.value="0"; els.cutoffMinutes.value="0"; els.flagReturningRequesters.checked=true; els.emailRequired.checked=true; els.includeTipsInEvent.checked=true; els.includeSocialsInEvent.checked=true; els.recurrenceMode.value="none";
-  els.eventLink.value="Create an event first"; els.qrImage.removeAttribute("src"); els.flyerQrImage.removeAttribute("src");
+  els.requestLimitMinutes.value="0";
+  els.cutoffMinutes.value="0";
+  els.flagReturningRequesters.checked=true;
+  els.emailRequired.checked=true;
+  if(els.includeTipsInEvent) els.includeTipsInEvent.checked=true;
+  if(els.includeSocialsInEvent) els.includeSocialsInEvent.checked=true;
+  els.recurrenceMode.value="none";
+  els.eventLink.value="Create an event first";
+  els.qrImage.removeAttribute("src");
+  els.flyerQrImage.removeAttribute("src");
   els.activeEventBanner.innerHTML='<div><h3>New event</h3><div class="meta">Fill out the form and save to create a new event.</div></div><span class="badge">Draft</span>';
-  renderQueue([]); renderHistory([]); els.nowPlayingBox.textContent="Nothing marked as now playing yet.";
-  setTimeSelectors("start","08:00"); setTimeSelectors("end","11:00");
+  renderQueue([]);
+  renderHistory([]);
+  els.nowPlayingBox.textContent="Nothing marked as now playing yet.";
+  setTimeSelectors("start","08:00");
+  setTimeSelectors("end","11:00");
   applyProfileDefaultsToForm();
 }
 
@@ -500,15 +511,15 @@ function eventFromInputs(forceLive=false){
     cutoffMinutes:Number(els.cutoffMinutes.value||0),
     flagReturningRequesters:!!els.flagReturningRequesters.checked,
     emailRequired:!!els.emailRequired.checked,
-    includeTipsInEvent:!!els.includeTipsInEvent.checked,
-    includeSocialsInEvent:!!els.includeSocialsInEvent.checked,
+    includeTipsInEvent: els.includeTipsInEvent ? !!els.includeTipsInEvent.checked : true,
+    includeSocialsInEvent: els.includeSocialsInEvent ? !!els.includeSocialsInEvent.checked : true,
     recurrenceMode:els.recurrenceMode.value,
-    tipLinkVenmo:els.includeTipsInEvent.checked ? els.tipLinkVenmo.value.trim() : "",
-    tipLinkPaypal:els.includeTipsInEvent.checked ? els.tipLinkPaypal.value.trim() : "",
-    instagram:els.includeSocialsInEvent.checked ? els.eventInstagram.value.trim() : "",
-    tiktok:els.includeSocialsInEvent.checked ? els.eventTiktok.value.trim() : "",
-    facebook:els.includeSocialsInEvent.checked ? els.eventFacebook.value.trim() : "",
-    website:els.includeSocialsInEvent.checked ? els.eventWebsite.value.trim() : "",
+    tipLinkVenmo: (els.includeTipsInEvent && els.includeTipsInEvent.checked) ? els.tipLinkVenmo.value.trim() : "",
+    tipLinkPaypal: (els.includeTipsInEvent && els.includeTipsInEvent.checked) ? els.tipLinkPaypal.value.trim() : "",
+    instagram: (els.includeSocialsInEvent && els.includeSocialsInEvent.checked) ? els.eventInstagram.value.trim() : "",
+    tiktok: (els.includeSocialsInEvent && els.includeSocialsInEvent.checked) ? els.eventTiktok.value.trim() : "",
+    facebook: (els.includeSocialsInEvent && els.includeSocialsInEvent.checked) ? els.eventFacebook.value.trim() : "",
+    website: (els.includeSocialsInEvent && els.includeSocialsInEvent.checked) ? els.eventWebsite.value.trim() : "",
     updatedAt:Date.now()
   };
 }
@@ -518,7 +529,19 @@ function renderEvent(eventId,e){
   els.eventName.value=e.name||""; els.eventVenue.value=e.venue||""; els.djName.value=e.djName||"";
   els.startDate.value=e.startDate||""; els.endDate.value=e.endDate||"";
   setTimeSelectors("start", e.startTime||"08:00"); setTimeSelectors("end", e.endTime||"11:00");
-  els.requestLimitMinutes.value=String(e.requestLimitMinutes||0); els.cutoffMinutes.value=String(e.cutoffMinutes||0); els.flagReturningRequesters.checked=e.flagReturningRequesters!==false; els.emailRequired.checked=e.emailRequired!==false; els.includeTipsInEvent.checked=e.includeTipsInEvent!==false; els.includeSocialsInEvent.checked=e.includeSocialsInEvent!==false; els.recurrenceMode.value=e.recurrenceMode||"none"; els.tipLinkVenmo.value=e.tipLinkVenmo||""; els.tipLinkPaypal.value=e.tipLinkPaypal||""; els.eventInstagram.value=e.instagram||""; els.eventTiktok.value=e.tiktok||""; els.eventFacebook.value=e.facebook||""; els.eventWebsite.value=e.website||"";
+  els.requestLimitMinutes.value=String(e.requestLimitMinutes||0);
+  els.cutoffMinutes.value=String(e.cutoffMinutes||0);
+  els.flagReturningRequesters.checked=e.flagReturningRequesters!==false;
+  els.emailRequired.checked=e.emailRequired!==false;
+  if(els.includeTipsInEvent) els.includeTipsInEvent.checked = e.includeTipsInEvent!==false;
+  if(els.includeSocialsInEvent) els.includeSocialsInEvent.checked = e.includeSocialsInEvent!==false;
+  els.recurrenceMode.value=e.recurrenceMode||"none";
+  els.tipLinkVenmo.value=e.tipLinkVenmo||"";
+  els.tipLinkPaypal.value=e.tipLinkPaypal||"";
+  els.eventInstagram.value=e.instagram||"";
+  els.eventTiktok.value=e.tiktok||"";
+  els.eventFacebook.value=e.facebook||"";
+  els.eventWebsite.value=e.website||"";
   const s=eventStatus(e); const badgeClass=s==="live"?"badge live":(s==="ended"?"badge closed":"badge"); const badgeText=s==="live"?"Live Now":(s==="ended"?"Ended":"Upcoming");
   const settings=[(e.requestLimitMinutes?`Limit: every ${e.requestLimitMinutes} min`:"Limit: none"), (e.cutoffMinutes?`Cutoff: ${e.cutoffMinutes} min before end`:"Cutoff: none"), (e.emailRequired!==false?"Email: required":"Email: optional")].join(" · ");
   els.activeEventBanner.innerHTML=`<div><h3>${esc(e.name||"Untitled Event")}</h3><div class="meta">${esc(e.venue||"No venue")}<br>DJ: ${esc(e.djName||"Not set")}<br>${e.startAt?`${dt(e.startAt)} – ${dt(e.endAt)}`:"Add date/time"}<br>${esc(settings)}</div></div><span class="${badgeClass}">${badgeText}</span>`;
@@ -721,6 +744,20 @@ function pushBrowserNotification(message){
   } catch(e){}
 }
 
+
+function refreshEventLinksFromToggles(){
+  if(els.includeTipsInEvent){
+    els.tipLinkVenmo.value = els.includeTipsInEvent.checked && userProfile.tipVenmo ? venmoUrl(userProfile.tipVenmo) : "";
+    els.tipLinkPaypal.value = els.includeTipsInEvent.checked && userProfile.tipPaypal ? paypalUrl(userProfile.tipPaypal) : "";
+  }
+  if(els.includeSocialsInEvent){
+    els.eventInstagram.value = els.includeSocialsInEvent.checked && userProfile.instagram ? instagramUrl(userProfile.instagram) : "";
+    els.eventTiktok.value = els.includeSocialsInEvent.checked && userProfile.tiktok ? tiktokUrl(userProfile.tiktok) : "";
+    els.eventFacebook.value = els.includeSocialsInEvent.checked && userProfile.facebook ? facebookUrl(userProfile.facebook) : "";
+    els.eventWebsite.value = els.includeSocialsInEvent.checked && userProfile.website ? userProfile.website.trim() : "";
+  }
+}
+
 function initFirebase(){
   if(!configLooksFilled()){ status("Paste your Firebase values into dj.html first."); return false; }
   try{
@@ -762,6 +799,10 @@ els.filterReturningBtn.addEventListener("click",()=>{ currentFilter="returning";
 els.saveProfileBtn.addEventListener("click", saveUserProfile);
 els.useProfileDefaultsBtn.addEventListener("click", useProfileDefaultsForNewEvent);
 els.applyRecentVenueBtn.addEventListener("click", ()=>{ if(els.recentVenueSelect.value) els.eventVenue.value = els.recentVenueSelect.value; });
+
+if(els.includeTipsInEvent) els.includeTipsInEvent.addEventListener("change", refreshEventLinksFromToggles);
+if(els.includeSocialsInEvent) els.includeSocialsInEvent.addEventListener("change", refreshEventLinksFromToggles);
+
 
 populateTimeSelectors();
 blankEventForm();
